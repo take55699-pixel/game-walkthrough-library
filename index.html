@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>攻略チャート・ライブラリ</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg:#060914;
+      --panel:#0d1424;
+      --panel-2:#131d32;
+      --panel-3:#1b2946;
+      --text:#f4f7ff;
+      --muted:#a2aec3;
+      --line:#293753;
+      --accent:#8a7dff;
+      --accent-2:#40d7b5;
+      --danger:#ff6b7a;
+      --warning:#ffc96b;
+      --shadow:0 22px 64px rgba(0,0,0,.42);
+      --radius:20px;
+      --content-width:1760px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 12% -10%,rgba(124,140,255,.18),transparent 34%),
+      radial-gradient(circle at 90% 0%,rgba(67,217,189,.10),transparent 28%),
+      var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh}
+    .topbar{
+      position:sticky;top:0;z-index:30;
+      backdrop-filter:blur(18px);
+      background:rgba(7,11,20,.78);
+      border-bottom:1px solid rgba(255,255,255,.07)
+    }
+    .topbar-inner{max-width:var(--content-width);margin:auto;padding:17px 32px;display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:14px;min-width:290px}
+    .brand-mark{
+      width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(145deg,var(--accent),#525dd8);box-shadow:0 10px 30px rgba(124,140,255,.32);
+      font-size:23px
+    }
+    .brand h1{font-size:19px;line-height:1.2;margin:0;letter-spacing:-.015em}
+    .brand p{font-size:12px;color:var(--muted);margin:4px 0 0}
+    .search-wrap{flex:1;position:relative}
+    .search-wrap input{
+      width:100%;height:48px;padding:0 48px 0 46px;border-radius:15px;border:1px solid var(--line);
+      background:rgba(14,20,36,.84);color:var(--text);outline:none
+    }
+    .search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,140,255,.15)}
+    .search-icon{position:absolute;left:17px;top:13px;color:var(--muted)}
+    .clear-search{position:absolute;right:10px;top:8px;border:0;background:transparent;color:var(--muted);font-size:20px;display:none}
+    .top-actions{display:flex;gap:9px}
+    .btn{
+      min-height:42px;border:1px solid var(--line);border-radius:12px;padding:9px 14px;
+      background:var(--panel-2);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      transition:.18s ease;white-space:nowrap
+    }
+    .btn:hover{transform:translateY(-1px);border-color:#435273;background:var(--panel-3)}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#626fe4);border-color:transparent;font-weight:750}
+    .btn.primary:hover{filter:brightness(1.08)}
+    .btn.danger{color:#ffdce0;border-color:rgba(255,107,122,.35);background:rgba(255,107,122,.10)}
+    .btn.ghost{background:transparent}
+    .btn.icon{width:42px;padding:0}
+    .btn.small{min-height:36px;padding:7px 10px;font-size:13px}
+    main{max-width:var(--content-width);margin:auto;padding:34px 32px 96px}
+    .hero{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:30px;align-items:end;
+      margin-bottom:26px;padding:8px 2px 2px
+    }
+    .hero h2{font-size:clamp(32px,3.4vw,54px);letter-spacing:-.045em;margin:0 0 10px;line-height:1.04}
+    .hero p{color:var(--muted);margin:0;line-height:1.8;font-size:15px;max-width:760px}
+    .stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+    .stat{min-width:126px;padding:15px 18px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:linear-gradient(180deg,rgba(20,29,50,.90),rgba(13,20,36,.84));box-shadow:0 10px 28px rgba(0,0,0,.16)}
+    .stat b{display:block;font-size:23px;letter-spacing:-.02em}.stat span{font-size:12px;color:var(--muted)}
+    .dropzone{
+      border:1.5px dashed #495a82;border-radius:var(--radius);padding:24px 26px;
+      background:linear-gradient(135deg,rgba(124,140,255,.08),rgba(67,217,189,.05));
+      display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px;transition:.2s;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 14px 36px rgba(0,0,0,.13)
+    }
+    .dropzone.dragover{border-color:var(--accent-2);background:rgba(67,217,189,.10);transform:scale(1.005)}
+    .drop-info{display:flex;align-items:center;gap:15px}
+    .drop-icon{width:54px;height:54px;border-radius:16px;background:linear-gradient(145deg,var(--panel-3),#202f50);display:grid;place-items:center;font-size:25px;box-shadow:0 10px 24px rgba(0,0,0,.20)}
+    .drop-info b{display:block;margin-bottom:4px}.drop-info span{font-size:13px;color:var(--muted)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:20px 0 22px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(13,20,36,.72);box-shadow:0 10px 30px rgba(0,0,0,.10)}
+    .filters{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .select,.input{
+      min-height:40px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);padding:8px 12px;outline:none
+    }
+    .select:focus,.input:focus{border-color:var(--accent)}
+    .view-switch{display:flex;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+    .view-switch button{border:0;background:var(--panel);color:var(--muted);width:40px;height:38px}
+    .view-switch button.active{background:var(--panel-3);color:var(--text)}
+    .library{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:24px}
+    .library.list{grid-template-columns:1fr}
+    .card{
+      position:relative;overflow:hidden;border-radius:20px;border:1px solid rgba(255,255,255,.085);
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));box-shadow:0 12px 34px rgba(0,0,0,.19);
+      transition:.22s ease
+    }
+    .card:hover{transform:translateY(-6px);border-color:#536796;box-shadow:var(--shadow)}
+    .cover{
+      aspect-ratio:3/4;position:relative;overflow:hidden;background:
+      linear-gradient(145deg,rgba(124,140,255,.28),rgba(67,217,189,.10)),
+      repeating-linear-gradient(45deg,transparent 0 18px,rgba(255,255,255,.025) 18px 36px)
+    }
+    .cover img{width:100%;height:100%;object-fit:cover;display:block}
+    .placeholder{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;color:#dce2ff}
+    .placeholder .gamepad{font-size:52px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.3))}
+    .placeholder span{font-size:12px;color:#aeb9d0;margin-top:12px}
+    .badge-row{position:absolute;left:11px;right:11px;top:11px;display:flex;justify-content:space-between;pointer-events:none}
+    .badge{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(4,7,14,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12)}
+    .favorite{
+      pointer-events:auto;border:0;width:34px;height:34px;border-radius:50%;font-size:17px;
+      background:rgba(4,7,14,.72);color:#8d99af;backdrop-filter:blur(8px)
+    }
+    .favorite.on{color:#ffd166}
+    .card-body{padding:17px}
+    .card h3{font-size:17px;line-height:1.42;margin:0 0 8px;letter-spacing:-.01em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+    .meta{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;min-height:19px}
+    .tag-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;min-height:24px}
+    .tag{font-size:11px;padding:4px 7px;border-radius:7px;background:rgba(124,140,255,.12);color:#cbd1ff}
+    .card-actions{display:grid;grid-template-columns:minmax(92px,1fr) auto auto;gap:8px;margin-top:16px}
+    .delete-btn{min-width:52px}
+    .library.list .card{display:grid;grid-template-columns:120px minmax(0,1fr)}
+    .library.list .cover{aspect-ratio:3/4;height:160px}
+    .library.list .card-body{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px}
+    .library.list .card-actions{margin:0;min-width:250px}
+    .empty{
+      grid-column:1/-1;text-align:center;padding:70px 20px;border:1px dashed var(--line);
+      border-radius:18px;color:var(--muted);background:rgba(14,20,36,.45)
+    }
+    .empty .big{font-size:56px;display:block;margin-bottom:12px}
+    .modal{
+      position:fixed;inset:0;z-index:100;background:rgba(2,4,9,.82);backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;padding:24px
+    }
+    .modal.open{display:flex}
+    .dialog{
+      width:min(680px,100%);max-height:92vh;overflow:auto;border:1px solid var(--line);border-radius:20px;
+      background:var(--panel);box-shadow:var(--shadow)
+    }
+    .dialog.wide{width:min(1560px,100%);height:min(94vh,1080px);display:flex;flex-direction:column;overflow:hidden}
+    .dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 20px;border-bottom:1px solid var(--line)}
+    .dialog-header h2{font-size:18px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dialog-body{padding:20px}
+    .dialog-footer{display:flex;justify-content:flex-end;gap:9px;padding:16px 20px;border-top:1px solid var(--line)}
+    .close{border:0;background:transparent;color:var(--muted);font-size:25px;width:38px;height:38px;border-radius:10px}
+    .close:hover{background:var(--panel-3);color:var(--text)}
+    .form-grid{display:grid;grid-template-columns:180px 1fr;gap:20px}
+    .cover-editor{aspect-ratio:3/4;border-radius:15px;overflow:hidden;border:1px solid var(--line);background:var(--panel-2);position:relative}
+    .cover-editor img{width:100%;height:100%;object-fit:cover;display:none}
+    .cover-editor .placeholder{position:absolute;inset:0}
+    .cover-tools{display:grid;gap:8px;margin-top:10px}
+    .fields{display:grid;gap:14px}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+    .field input,.field textarea{width:100%}
+    .field textarea{min-height:95px;resize:vertical}
+    .hint{font-size:12px;color:var(--muted);line-height:1.55}
+    .viewer-toolbar{display:flex;gap:8px;align-items:center}
+    .viewer-note{padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(255,201,107,.08);color:#d7deee;font-size:12px;line-height:1.5}
+    .viewer-frame{border:0;width:100%;height:100%;background:white;flex:1}
+    .toast-wrap{position:fixed;right:20px;bottom:20px;z-index:300;display:grid;gap:10px;pointer-events:none}
+    .toast{min-width:260px;max-width:380px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:#151d31;box-shadow:var(--shadow);animation:toastIn .22s ease}
+    .toast.ok{border-color:rgba(67,217,189,.45)}.toast.error{border-color:rgba(255,107,122,.5)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .storage{font-size:12px;color:var(--muted);margin-left:auto}
+    .menu{position:relative}
+    .dropdown{
+      position:absolute;right:0;top:48px;z-index:50;min-width:220px;padding:7px;border:1px solid var(--line);
+      border-radius:13px;background:var(--panel-2);box-shadow:var(--shadow);display:none
+    }
+    .dropdown.open{display:grid}
+    .dropdown button{border:0;background:transparent;color:var(--text);text-align:left;padding:10px 11px;border-radius:8px}
+    .dropdown button:hover{background:var(--panel-3)}
+    .mobile-add{display:none;position:fixed;right:18px;bottom:18px;z-index:40;width:58px;height:58px;border-radius:18px;border:0;background:linear-gradient(135deg,var(--accent),#626fe4);color:white;font-size:29px;box-shadow:0 12px 35px rgba(76,91,220,.42)}
+    @media(max-width:900px){
+      .topbar-inner{padding:14px 18px;flex-wrap:wrap}
+      .brand{min-width:0;flex:1}.brand p{display:none}
+      .search-wrap{order:3;flex-basis:100%}
+      .top-actions .primary{display:none}
+      main{padding:24px 18px 88px}
+      .hero{grid-template-columns:1fr}.stats{justify-content:flex-start}
+      .dropzone{align-items:flex-start}.dropzone>.btn{display:none}
+      .mobile-add{display:block}
+      .form-grid{grid-template-columns:1fr}.cover-column{width:min(230px,100%);margin:auto}
+    }
+    @media(max-width:640px){
+      .brand-mark{width:39px;height:39px}.brand h1{font-size:16px}
+      .hero h2{font-size:31px}.stats{display:grid;grid-template-columns:repeat(2,1fr);width:100%}.stat{min-width:0}
+      .toolbar{align-items:flex-start}.filters{width:100%}.filters .select{flex:1}
+      .storage{width:100%;margin:0}.library{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .card-body{padding:12px}.card h3{font-size:14px}.card-actions{grid-template-columns:1fr auto}.card-actions .edit-btn{display:none}
+      .library.list .card{grid-template-columns:88px minmax(0,1fr)}.library.list .cover{height:124px}
+      .library.list .card-body{display:block}.library.list .card-actions{min-width:0;margin-top:10px}
+      .dialog-header,.dialog-body,.dialog-footer{padding-left:15px;padding-right:15px}
+      .viewer-toolbar .label{display:none}
+    }
+    @media(max-width:390px){.library{grid-template-columns:1fr}}
+
+    /* v1.3 visual refinement */
+    html{scroll-behavior:smooth}
+    body{overflow-x:hidden}
+    body::before{
+      content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.38;
+      background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+      background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 72%);
+    }
+    ::selection{background:rgba(138,125,255,.38);color:#fff}
+    button,input,select,textarea{transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease,transform .18s ease}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .topbar{box-shadow:0 8px 30px rgba(0,0,0,.16)}
+    .search-wrap input::placeholder{color:#78859d}
+    .search-wrap input:hover{border-color:#394966}
+    .btn{font-weight:650;letter-spacing:.005em}
+    .btn.primary{box-shadow:0 9px 22px rgba(98,111,228,.22)}
+    .btn:active{transform:translateY(0) scale(.985)}
+    .dropzone:hover{border-color:#5a6c98;background:linear-gradient(135deg,rgba(138,125,255,.11),rgba(64,215,181,.065))}
+    .select,.input{background:rgba(13,20,36,.92)}
+    .view-switch{background:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.01)}
+    .view-switch button:hover{color:var(--text);background:var(--panel-2)}
+    .cover::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,transparent 58%,rgba(3,6,13,.13));}
+    .cover img{transition:transform .36s ease,filter .36s ease}
+    .card:hover .cover img{transform:scale(1.025);filter:saturate(1.04) contrast(1.02)}
+    .badge-row{z-index:2}
+    .favorite{transition:transform .18s ease,background-color .18s ease,color .18s ease}
+    .favorite:hover{transform:scale(1.08);background:rgba(11,16,29,.88)}
+    .tag{border:1px solid rgba(138,125,255,.13)}
+    .empty{min-height:330px;display:grid;place-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+    .empty p{margin:10px 0 0;line-height:1.7}
+    .dialog{box-shadow:0 30px 90px rgba(0,0,0,.55)}
+    .dialog-header{background:rgba(19,29,50,.68);backdrop-filter:blur(12px)}
+    .dialog-footer{background:rgba(10,16,29,.72)}
+    .viewer-frame{border-radius:0 0 19px 19px}
+    .toast{backdrop-filter:blur(14px)}
+    @media(min-width:1500px){
+      .library{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+    }
+    @media(max-width:1100px){
+      .brand{min-width:250px}
+      .library{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+    }
+    @media(max-width:900px){
+      .toolbar{padding:9px;margin-top:16px}
+      .hero{padding-top:2px}
+    }
+    @media(max-width:640px){
+      .toolbar{background:transparent;border:0;box-shadow:none;padding:0}
+      .dropzone{padding:18px}
+      .drop-icon{width:48px;height:48px}
+      .card{border-radius:16px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">🎮</div>
+        <div><h1>攻略チャート・ライブラリ</h1><p>ゲーム攻略HTMLを1か所で管理</p></div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" type="search" placeholder="ゲーム名・タグ・メモを検索" autocomplete="off" />
+        <button class="clear-search" id="clearSearch" aria-label="検索を消去">×</button>
+      </div>
+      <div class="top-actions">
+        <button class="btn primary" id="addButton">＋ HTMLを追加</button>
+        <div class="menu">
+          <button class="btn icon" id="menuButton" aria-label="メニュー">⋮</button>
+          <div class="dropdown" id="dropdown">
+            <button id="exportButton">バックアップを書き出す</button>
+            <button id="importButton">バックアップを読み込む</button>
+            <button id="clearAllButton">全データを削除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h2>攻略本棚を、ひとつに。</h2>
+        <p>作成した攻略チャートHTMLとジャケット画像を、ブラウザ内に保存して整理できます。</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="totalCount">0</b><span>登録タイトル</span></div>
+        <div class="stat"><b id="favoriteCount">0</b><span>お気に入り</span></div>
+      </div>
+    </section>
+
+    <section class="dropzone" id="dropzone">
+      <div class="drop-info">
+        <div class="drop-icon">⇧</div>
+        <div><b>HTMLファイルをドロップ</b><span>複数ファイル対応・画像やCSSを埋め込んだ単一HTML推奨</span></div>
+      </div>
+      <button class="btn" id="dropSelectButton">ファイルを選択</button>
+    </section>
+
+    <section class="toolbar">
+      <div class="filters">
+        <select class="select" id="filterSelect" aria-label="絞り込み">
+          <option value="all">すべて</option>
+          <option value="favorite">お気に入り</option>
+          <option value="withCover">ジャケットあり</option>
+          <option value="withoutCover">ジャケットなし</option>
+        </select>
+        <select class="select" id="sortSelect" aria-label="並べ替え">
+          <option value="updatedDesc">更新が新しい順</option>
+          <option value="createdDesc">追加が新しい順</option>
+          <option value="titleAsc">タイトル順</option>
+          <option value="titleDesc">タイトル逆順</option>
+        </select>
+        <span class="storage" id="storageInfo">ブラウザ内保存</span>
+      </div>
+      <div class="view-switch" aria-label="表示切替">
+        <button id="gridView" class="active" title="グリッド表示">▦</button>
+        <button id="listView" title="リスト表示">☰</button>
+      </div>
+    </section>
+
+    <section class="library" id="library"></section>
+  </main>
+  <button class="mobile-add" id="mobileAdd" aria-label="HTMLを追加">＋</button>
+</div>
+
+<input type="file" id="htmlInput" accept=".html,.htm,text/html" multiple hidden />
+<input type="file" id="backupInput" accept=".json,application/json" hidden />
+<input type="file" id="coverInput" accept="image/*" hidden />
+
+<div class="modal" id="editModal" aria-hidden="true">
+  <div class="dialog">
+    <div class="dialog-header"><h2 id="editHeading">攻略チャートを編集</h2><button class="close" data-close="editModal">×</button></div>
+    <div class="dialog-body">
+      <div class="form-grid">
+        <div class="cover-column">
+          <div class="cover-editor">
+            <div class="placeholder" id="editPlaceholder"><div class="gamepad">🎮</div><span>ジャケット未設定</span></div>
+            <img id="editCoverPreview" alt="ジャケット画像プレビュー" />
+          </div>
+          <div class="cover-tools">
+            <button class="btn small" id="chooseCoverButton">画像を選択</button>
+            <button class="btn small ghost" id="removeCoverButton">画像を外す</button>
+          </div>
+        </div>
+        <div class="fields">
+          <div class="field"><label for="titleInput">ゲームタイトル</label><input class="input" id="titleInput" maxlength="120" /></div>
+          <div class="field"><label for="platformInput">プラットフォーム</label><input class="input" id="platformInput" maxlength="80" placeholder="例：Steam / PS5 / Switch" /></div>
+          <div class="field"><label for="tagsInput">タグ</label><input class="input" id="tagsInput" maxlength="200" placeholder="例：推理, RPG, 完全攻略（カンマ区切り）" /></div>
+          <div class="field"><label for="notesInput">メモ</label><textarea class="input" id="notesInput" maxlength="1000" placeholder="版違い、進行状況、注意点など"></textarea></div>
+          <p class="hint">HTML本文はそのまま保存されます。タイトルはHTML内の &lt;title&gt; や最初の &lt;h1&gt; から自動取得します。</p>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn" data-close="editModal">キャンセル</button>
+      <button class="btn primary" id="saveEditButton">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="viewerModal" aria-hidden="true">
+  <div class="dialog wide">
+    <div class="dialog-header">
+      <h2 id="viewerTitle">攻略チャート</h2>
+      <div class="viewer-toolbar">
+        <button class="btn small" id="openNewTabButton" title="攻略HTMLを制限なしで開く"><span class="label">完全表示で</span>開く</button>
+        <button class="btn small" id="downloadHtmlButton">HTML保存</button>
+        <button class="close" data-close="viewerModal">×</button>
+      </div>
+    </div>
+    <div class="viewer-note">アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「完全表示で開く」を使用してください。</div>
+    <iframe class="viewer-frame" id="viewerFrame" title="攻略チャート表示" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const DB_NAME = "GameWalkthroughLibraryDB";
+  const DB_VERSION = 1;
+  const STORE = "guides";
+
+  function safeStorageGet(key, fallback = null) {
+    try {
+      const value = window.localStorage.getItem(key);
+      return value === null ? fallback : value;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // localStorageが禁止された環境でも、本体機能は継続する。
+    }
+  }
+
+  const storedView = safeStorageGet("gwl-view", "grid");
+
+  const state = {
+    guides: [],
+    editingId: null,
+    pendingCover: null,
+    pendingCoverChanged: false,
+    viewingId: null,
+    view: storedView === "list" ? "list" : "grid",
+    query: "",
+    filter: "all",
+    sort: "updatedDesc"
+  };
+
+  const $ = (s) => document.querySelector(s);
+  const els = {
+    library: $("#library"),
+    htmlInput: $("#htmlInput"),
+    backupInput: $("#backupInput"),
+    coverInput: $("#coverInput"),
+    addButton: $("#addButton"),
+    mobileAdd: $("#mobileAdd"),
+    dropSelectButton: $("#dropSelectButton"),
+    dropzone: $("#dropzone"),
+    searchInput: $("#searchInput"),
+    clearSearch: $("#clearSearch"),
+    filterSelect: $("#filterSelect"),
+    sortSelect: $("#sortSelect"),
+    gridView: $("#gridView"),
+    listView: $("#listView"),
+    totalCount: $("#totalCount"),
+    favoriteCount: $("#favoriteCount"),
+    storageInfo: $("#storageInfo"),
+    editModal: $("#editModal"),
+    titleInput: $("#titleInput"),
+    platformInput: $("#platformInput"),
+    tagsInput: $("#tagsInput"),
+    notesInput: $("#notesInput"),
+    editCoverPreview: $("#editCoverPreview"),
+    editPlaceholder: $("#editPlaceholder"),
+    chooseCoverButton: $("#chooseCoverButton"),
+    removeCoverButton: $("#removeCoverButton"),
+    saveEditButton: $("#saveEditButton"),
+    viewerModal: $("#viewerModal"),
+    viewerTitle: $("#viewerTitle"),
+    viewerFrame: $("#viewerFrame"),
+    openNewTabButton: $("#openNewTabButton"),
+    downloadHtmlButton: $("#downloadHtmlButton"),
+    menuButton: $("#menuButton"),
+    dropdown: $("#dropdown"),
+    exportButton: $("#exportButton"),
+    importButton: $("#importButton"),
+    clearAllButton: $("#clearAllButton"),
+    toastWrap: $("#toastWrap")
+  };
+
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const database = req.result;
+        if (!database.objectStoreNames.contains(STORE)) {
+          const store = database.createObjectStore(STORE, { keyPath: "id" });
+          store.createIndex("updatedAt", "updatedAt");
+          store.createIndex("title", "title");
+        }
+      };
+      req.onsuccess = () => { db = req.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function transaction(mode = "readonly") {
+    return db.transaction(STORE, mode).objectStore(STORE);
+  }
+
+  function getAllGuides() {
+    return new Promise((resolve, reject) => {
+      const req = transaction().getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function putGuide(guide) {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").put(guide);
+      req.onsuccess = () => resolve(guide);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function deleteGuide(id) {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function clearGuides() {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function id() {
+    return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  function escapeHTML(value = "") {
+    return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+  }
+
+  function safeFilename(value) {
+    return (value || "攻略チャート").replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 100) || "攻略チャート";
+  }
+
+  function formatDate(timestamp) {
+    try {
+      return new Intl.DateTimeFormat("ja-JP", { year:"numeric", month:"short", day:"numeric" }).format(new Date(timestamp));
+    } catch { return ""; }
+  }
+
+  function localDateStamp(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseTitle(html, fallback) {
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const title = doc.querySelector("title")?.textContent?.trim();
+      const h1 = doc.querySelector("h1")?.textContent?.trim();
+      const meta = doc.querySelector('meta[property="og:title"]')?.getAttribute("content")?.trim();
+      return (title || h1 || meta || fallback).replace(/\s+/g, " ").slice(0, 120);
+    } catch {
+      return fallback;
+    }
+  }
+
+  function normalizeTags(text) {
+    return [...new Set(String(text || "").split(/[,、]/).map(v => v.trim()).filter(Boolean))].slice(0, 12);
+  }
+
+  function fileToText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file, "UTF-8");
+    });
+  }
+
+  function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function toast(message, type = "ok") {
+    while (els.toastWrap.children.length >= 3) {
+      els.toastWrap.firstElementChild?.remove();
+    }
+    const node = document.createElement("div");
+    node.className = `toast ${type}`;
+    node.textContent = message;
+    els.toastWrap.appendChild(node);
+    setTimeout(() => node.remove(), 3200);
+  }
+
+  function openModal(node) {
+    node.classList.add("open");
+    node.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal(node) {
+    node.classList.remove("open");
+    node.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (node === els.viewerModal) els.viewerFrame.removeAttribute("srcdoc");
+  }
+
+  async function refresh() {
+    state.guides = await getAllGuides();
+    render();
+    updateStorageInfo();
+  }
+
+  function updateStorageInfo() {
+    const bytes = state.guides.reduce((sum, g) => sum + (g.html?.length || 0) * 2 + (g.cover?.length || 0) * 2, 0);
+    let label;
+    if (bytes === 0) label = "0 KB 使用";
+    else if (bytes < 1024 * 1024) label = `${Math.max(1, Math.round(bytes / 1024))} KB 使用`;
+    else label = `${(bytes / 1024 / 1024).toFixed(1)} MB 使用`;
+    els.storageInfo.textContent = `ブラウザ内保存・約 ${label}`;
+  }
+
+  function getVisibleGuides() {
+    const q = state.query.trim().toLowerCase();
+    let list = state.guides.filter(g => {
+      const hay = [g.title, g.platform, g.notes, ...(g.tags || [])].join(" ").toLowerCase();
+      if (q && !hay.includes(q)) return false;
+      if (state.filter === "favorite" && !g.favorite) return false;
+      if (state.filter === "withCover" && !g.cover) return false;
+      if (state.filter === "withoutCover" && g.cover) return false;
+      return true;
+    });
+    const sorters = {
+      updatedDesc: (a,b) => b.updatedAt - a.updatedAt,
+      createdDesc: (a,b) => b.createdAt - a.createdAt,
+      titleAsc: (a,b) => a.title.localeCompare(b.title, "ja"),
+      titleDesc: (a,b) => b.title.localeCompare(a.title, "ja")
+    };
+    return list.sort(sorters[state.sort] || sorters.updatedDesc);
+  }
+
+  function render() {
+    const list = getVisibleGuides();
+    els.totalCount.textContent = state.guides.length;
+    els.favoriteCount.textContent = state.guides.filter(g => g.favorite).length;
+    els.library.classList.toggle("list", state.view === "list");
+    els.gridView.classList.toggle("active", state.view === "grid");
+    els.listView.classList.toggle("active", state.view === "list");
+
+    if (!list.length) {
+      const hasAny = state.guides.length > 0;
+      els.library.innerHTML = `<div class="empty"><span class="big">${hasAny ? "🔎" : "📚"}</span><b>${hasAny ? "条件に一致する攻略チャートがありません" : "攻略チャートはまだありません"}</b><p>${hasAny ? "検索語や絞り込みを変更してください。" : "HTMLファイルを追加すると、ここにジャケット付きで並びます。"}</p></div>`;
+      return;
+    }
+
+    els.library.innerHTML = list.map(g => {
+      const cover = g.cover
+        ? `<img src="${escapeHTML(g.cover)}" alt="${escapeHTML(g.title)}のジャケット" loading="lazy">`
+        : `<div class="placeholder"><div class="gamepad">🎮</div><span>ジャケット未設定</span></div>`;
+      const tags = (g.tags || []).slice(0, 3).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join("");
+      return `<article class="card" data-id="${escapeHTML(g.id)}">
+        <div class="cover">
+          ${cover}
+          <div class="badge-row">
+            <span class="badge">HTML</span>
+            <button class="favorite ${g.favorite ? "on" : ""}" data-action="favorite" title="お気に入り">${g.favorite ? "★" : "☆"}</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div>
+            <h3 title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</h3>
+            <div class="meta"><span>${escapeHTML(g.platform || "機種未設定")}</span><span>・</span><span>${formatDate(g.updatedAt)}</span></div>
+            <div class="tag-list">${tags}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn small primary" data-action="view">開く</button>
+            <button class="btn small edit-btn" data-action="edit" title="編集">編集</button>
+            <button class="btn small danger delete-btn" data-action="delete" title="削除" aria-label="この攻略チャートを削除">削除</button>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  async function addFiles(files) {
+    const htmlFiles = [...files].filter(f => /\.html?$/i.test(f.name) || f.type === "text/html");
+    if (!htmlFiles.length) return toast("HTMLファイルを選択してください。", "error");
+    let added = 0;
+    let lastAddedId = null;
+    for (const file of htmlFiles) {
+      try {
+        const html = await fileToText(file);
+        if (!html.trim()) throw new Error("empty");
+        const now = Date.now() + added;
+        const guide = {
+          id: id(),
+          title: parseTitle(html, file.name.replace(/\.html?$/i, "")),
+          platform: "",
+          tags: [],
+          notes: "",
+          favorite: false,
+          cover: null,
+          html,
+          originalName: file.name,
+          createdAt: now,
+          updatedAt: now
+        };
+        await putGuide(guide);
+        lastAddedId = guide.id;
+        added++;
+      } catch (error) {
+        console.error(error);
+        toast(`${file.name} を読み込みまたは保存できませんでした。`, "error");
+      }
+    }
+    els.htmlInput.value = "";
+    await refresh();
+    if (added > 0) toast(`${added}件の攻略チャートを追加しました。`);
+    if (added === 1 && lastAddedId) openEditor(lastAddedId);
+  }
+
+  function setCoverPreview(dataUrl) {
+    els.editCoverPreview.src = dataUrl || "";
+    els.editCoverPreview.style.display = dataUrl ? "block" : "none";
+    els.editPlaceholder.style.display = dataUrl ? "none" : "flex";
+  }
+
+  function openEditor(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    state.editingId = guideId;
+    state.pendingCover = guide.cover || null;
+    state.pendingCoverChanged = false;
+    els.titleInput.value = guide.title || "";
+    els.platformInput.value = guide.platform || "";
+    els.tagsInput.value = (guide.tags || []).join(", ");
+    els.notesInput.value = guide.notes || "";
+    setCoverPreview(state.pendingCover);
+    openModal(els.editModal);
+    setTimeout(() => els.titleInput.focus(), 80);
+  }
+
+  async function saveEditor() {
+    const guide = state.guides.find(g => g.id === state.editingId);
+    if (!guide) return;
+    const title = els.titleInput.value.trim();
+    if (!title) return toast("ゲームタイトルを入力してください。", "error");
+    const updated = {
+      ...guide,
+      title,
+      platform: els.platformInput.value.trim(),
+      tags: normalizeTags(els.tagsInput.value),
+      notes: els.notesInput.value.trim(),
+      cover: state.pendingCover,
+      updatedAt: Date.now()
+    };
+    try {
+      await putGuide(updated);
+      closeModal(els.editModal);
+      await refresh();
+      toast("変更を保存しました。");
+    } catch (err) {
+      console.error(err);
+      toast("保存できませんでした。保存容量をご確認ください。", "error");
+    }
+  }
+
+  async function toggleFavorite(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    await putGuide({...guide, favorite: !guide.favorite, updatedAt: Date.now()});
+    await refresh();
+  }
+
+  function openViewer(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    state.viewingId = guideId;
+    els.viewerTitle.textContent = guide.title;
+    els.viewerFrame.srcdoc = guide.html;
+    openModal(els.viewerModal);
+  }
+
+  function downloadBlob(content, type, filename) {
+    const blob = content instanceof Blob ? content : new Blob([content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2500);
+  }
+
+  function downloadCurrentHTML() {
+    const guide = state.guides.find(g => g.id === state.viewingId);
+    if (!guide) return;
+    downloadBlob(guide.html, "text/html;charset=utf-8", `${safeFilename(guide.title)}.html`);
+  }
+
+  function openCurrentInNewTab() {
+    const guide = state.guides.find(g => g.id === state.viewingId);
+    if (!guide) return;
+    const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function handleCardAction(event) {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    const card = button.closest(".card");
+    const guideId = card?.dataset.id;
+    if (!guideId) return;
+    const action = button.dataset.action;
+    if (action === "view") openViewer(guideId);
+    if (action === "edit") openEditor(guideId);
+    if (action === "favorite") await toggleFavorite(guideId);
+    if (action === "delete") {
+      const guide = state.guides.find(g => g.id === guideId);
+      if (!guide) return;
+      const approved = confirm(`「${guide.title}」を削除しますか？\n\nHTML本体・ジャケット画像・メモが削除されます。`);
+      if (!approved) return;
+      try {
+        await deleteGuide(guideId);
+        if (state.editingId === guideId) state.editingId = null;
+        if (state.viewingId === guideId) state.viewingId = null;
+        await refresh();
+        toast(`「${guide.title}」を削除しました。`);
+      } catch (error) {
+        console.error(error);
+        toast("削除できませんでした。もう一度お試しください。", "error");
+      }
+    }
+  }
+
+  async function exportBackup() {
+    const payload = {
+      app: "攻略チャート・ライブラリ",
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      guides: state.guides
+    };
+    downloadBlob(JSON.stringify(payload, null, 2), "application/json;charset=utf-8", `攻略チャート・バックアップ_${localDateStamp()}.json`);
+    els.dropdown.classList.remove("open");
+    toast("バックアップを書き出しました。");
+  }
+
+  async function importBackup(file) {
+    try {
+      const text = await fileToText(file);
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.guides)) throw new Error("invalid");
+      let count = 0;
+      for (const raw of data.guides) {
+        if (!raw.html || typeof raw.html !== "string") continue;
+        const now = Date.now();
+        const guide = {
+          id: raw.id || id(),
+          title: String(raw.title || "無題の攻略チャート").slice(0,120),
+          platform: String(raw.platform || "").slice(0,80),
+          tags: Array.isArray(raw.tags) ? raw.tags.map(String).slice(0,12) : [],
+          notes: String(raw.notes || "").slice(0,1000),
+          favorite: Boolean(raw.favorite),
+          cover: typeof raw.cover === "string" && raw.cover.startsWith("data:image/") ? raw.cover : null,
+          html: raw.html,
+          originalName: String(raw.originalName || ""),
+          createdAt: Number(raw.createdAt) || now,
+          updatedAt: Number(raw.updatedAt) || now
+        };
+        await putGuide(guide);
+        count++;
+      }
+      await refresh();
+      toast(`${count}件を読み込みました。`);
+    } catch (err) {
+      console.error(err);
+      toast("バックアップ形式を読み込めませんでした。", "error");
+    } finally {
+      els.backupInput.value = "";
+    }
+  }
+
+  function bindEvents() {
+    [els.addButton, els.mobileAdd, els.dropSelectButton].forEach(b => b.addEventListener("click", () => els.htmlInput.click()));
+    els.htmlInput.addEventListener("change", e => addFiles(e.target.files));
+    els.coverInput.addEventListener("change", async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) return toast("画像ファイルを選択してください。", "error");
+      if (file.size > 12 * 1024 * 1024) return toast("画像は12MB以下にしてください。", "error");
+      state.pendingCover = await fileToDataURL(file);
+      state.pendingCoverChanged = true;
+      setCoverPreview(state.pendingCover);
+      els.coverInput.value = "";
+    });
+    els.chooseCoverButton.addEventListener("click", () => els.coverInput.click());
+    els.removeCoverButton.addEventListener("click", () => {
+      state.pendingCover = null;
+      state.pendingCoverChanged = true;
+      setCoverPreview(null);
+    });
+    els.saveEditButton.addEventListener("click", saveEditor);
+    els.library.addEventListener("click", handleCardAction);
+
+    ["dragenter","dragover"].forEach(type => els.dropzone.addEventListener(type, e => {
+      e.preventDefault(); e.stopPropagation(); els.dropzone.classList.add("dragover");
+    }));
+    ["dragleave","drop"].forEach(type => els.dropzone.addEventListener(type, e => {
+      e.preventDefault(); e.stopPropagation(); els.dropzone.classList.remove("dragover");
+    }));
+    els.dropzone.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+    els.searchInput.addEventListener("input", e => {
+      state.query = e.target.value;
+      els.clearSearch.style.display = state.query ? "block" : "none";
+      render();
+    });
+    els.clearSearch.addEventListener("click", () => {
+      els.searchInput.value = ""; state.query = ""; els.clearSearch.style.display = "none"; render(); els.searchInput.focus();
+    });
+    els.filterSelect.addEventListener("change", e => { state.filter = e.target.value; render(); });
+    els.sortSelect.addEventListener("change", e => { state.sort = e.target.value; render(); });
+    els.gridView.addEventListener("click", () => { state.view = "grid"; safeStorageSet("gwl-view", "grid"); render(); });
+    els.listView.addEventListener("click", () => { state.view = "list"; safeStorageSet("gwl-view", "list"); render(); });
+
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => closeModal(document.getElementById(b.dataset.close))));
+    [els.editModal, els.viewerModal].forEach(modal => modal.addEventListener("mousedown", e => { if (e.target === modal) closeModal(modal); }));
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        if (els.viewerModal.classList.contains("open")) closeModal(els.viewerModal);
+        else if (els.editModal.classList.contains("open")) closeModal(els.editModal);
+      }
+    });
+
+    els.downloadHtmlButton.addEventListener("click", downloadCurrentHTML);
+    els.openNewTabButton.addEventListener("click", openCurrentInNewTab);
+    els.menuButton.addEventListener("click", e => { e.stopPropagation(); els.dropdown.classList.toggle("open"); });
+    document.addEventListener("click", e => { if (!e.target.closest(".menu")) els.dropdown.classList.remove("open"); });
+    els.exportButton.addEventListener("click", exportBackup);
+    els.importButton.addEventListener("click", () => { els.dropdown.classList.remove("open"); els.backupInput.click(); });
+    els.backupInput.addEventListener("change", e => { if (e.target.files?.[0]) importBackup(e.target.files[0]); });
+    els.clearAllButton.addEventListener("click", async () => {
+      els.dropdown.classList.remove("open");
+      if (!state.guides.length) return toast("削除するデータがありません。", "error");
+      if (!confirm(`登録済みの${state.guides.length}件をすべて削除しますか？\nこの操作は元に戻せません。`)) return;
+      if (!confirm("最終確認：バックアップ済みですか？")) return;
+      await clearGuides();
+      await refresh();
+      toast("全データを削除しました。");
+    });
+  }
+
+  async function init() {
+    try {
+      if (!("indexedDB" in window)) throw new Error("IndexedDB unsupported");
+      await openDB();
+      bindEvents();
+      await refresh();
+    } catch (err) {
+      console.error(err);
+      els.library.innerHTML = `<div class="empty"><span class="big">⚠️</span><b>保存機能を開始できませんでした</b><p>通常モードのChrome、Edge、Firefox、Safariで開いてください。</p></div>`;
+      toast("ブラウザのデータベース機能を利用できません。", "error");
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
