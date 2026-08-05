@@ -270,6 +270,7 @@
         <button class="clear-search" id="clearSearch" aria-label="検索を消去">×</button>
       </div>
       <div class="top-actions">
+        <button class="btn small" id="languageButton" title="Switch language" aria-label="Switch language">EN</button>
         <button class="btn primary" id="addButton">＋ HTMLを追加</button>
         <div class="menu">
           <button class="btn icon" id="menuButton" aria-label="メニュー">⋮</button>
@@ -375,7 +376,7 @@
         <button class="close" data-close="viewerModal">×</button>
       </div>
     </div>
-    <div class="viewer-note">アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「完全表示で開く」を使用してください。</div>
+    <div class="viewer-note">アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「制限なしで開く」を使用してください。</div>
     <iframe class="viewer-frame" id="viewerFrame" title="攻略チャート表示" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe>
   </div>
 </div>
@@ -408,6 +409,7 @@
   }
 
   const storedView = safeStorageGet("gwl-view", "grid");
+  const storedLanguage = safeStorageGet("gwl-language", "ja");
 
   const state = {
     guides: [],
@@ -416,6 +418,7 @@
     pendingCoverChanged: false,
     viewingId: null,
     view: storedView === "list" ? "list" : "grid",
+    language: storedLanguage === "en" ? "en" : "ja",
     query: "",
     filter: "all",
     sort: "updatedDesc"
@@ -428,6 +431,7 @@
     backupInput: $("#backupInput"),
     coverInput: $("#coverInput"),
     addButton: $("#addButton"),
+    languageButton: $("#languageButton"),
     mobileAdd: $("#mobileAdd"),
     dropSelectButton: $("#dropSelectButton"),
     dropzone: $("#dropzone"),
@@ -462,6 +466,267 @@
     clearAllButton: $("#clearAllButton"),
     toastWrap: $("#toastWrap")
   };
+
+  const translations = {
+    ja: {
+      documentTitle: "攻略チャート・ライブラリ",
+      brandTitle: "攻略チャート・ライブラリ",
+      brandSubtitle: "ゲーム攻略HTMLを1か所で管理",
+      searchPlaceholder: "ゲーム名・タグ・メモを検索",
+      clearSearch: "検索を消去",
+      addHtml: "＋ HTMLを追加",
+      menu: "メニュー",
+      exportBackup: "バックアップを書き出す",
+      importBackup: "バックアップを読み込む",
+      clearAll: "全データを削除",
+      heroTitle: "攻略本棚を、ひとつに。",
+      heroText: "作成した攻略チャートHTMLとジャケット画像を、ブラウザ内に保存して整理できます。",
+      totalTitles: "登録タイトル",
+      favorites: "お気に入り",
+      dropTitle: "HTMLファイルをドロップ",
+      dropText: "複数ファイル対応・画像やCSSを埋め込んだ単一HTML推奨",
+      selectFile: "ファイルを選択",
+      filterAria: "絞り込み",
+      filterAll: "すべて",
+      filterFavorite: "お気に入り",
+      filterWithCover: "ジャケットあり",
+      filterWithoutCover: "ジャケットなし",
+      sortAria: "並べ替え",
+      sortUpdated: "更新が新しい順",
+      sortCreated: "追加が新しい順",
+      sortTitleAsc: "タイトル順",
+      sortTitleDesc: "タイトル逆順",
+      viewAria: "表示切替",
+      gridView: "グリッド表示",
+      listView: "リスト表示",
+      editHeading: "攻略チャートを編集",
+      coverUnset: "ジャケット未設定",
+      coverPreviewAlt: "ジャケット画像プレビュー",
+      chooseImage: "画像を選択",
+      removeImage: "画像を外す",
+      gameTitle: "ゲームタイトル",
+      platform: "プラットフォーム",
+      platformPlaceholder: "例：Steam / PS5 / Switch",
+      tags: "タグ",
+      tagsPlaceholder: "例：推理, RPG, 完全攻略（カンマ区切り）",
+      notes: "メモ",
+      notesPlaceholder: "版違い、進行状況、注意点など",
+      editHint: "HTML本文はそのまま保存されます。タイトルはHTML内の <title> や最初の <h1> から自動取得します。",
+      cancel: "キャンセル",
+      save: "保存",
+      viewerDefaultTitle: "攻略チャート",
+      openUnrestricted: "制限なしで開く",
+      openUnrestrictedTitle: "攻略HTMLを制限なしで開く",
+      downloadHtml: "HTML保存",
+      viewerNote: "アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「制限なしで開く」を使用してください。",
+      viewerFrameTitle: "攻略チャート表示",
+      languageButton: "EN",
+      languageButtonLabel: "Switch to English",
+      storagePrefix: "ブラウザ内保存・約",
+      used: "使用",
+      emptyFilteredTitle: "条件に一致する攻略チャートがありません",
+      emptyNoneTitle: "攻略チャートはまだありません",
+      emptyFilteredText: "検索語や絞り込みを変更してください。",
+      emptyNoneText: "HTMLファイルを追加すると、ここにジャケット付きで並びます。",
+      coverAlt: "{title}のジャケット",
+      platformUnset: "機種未設定",
+      open: "開く",
+      edit: "編集",
+      delete: "削除",
+      favorite: "お気に入り",
+      deleteAria: "この攻略チャートを削除",
+      selectHtmlError: "HTMLファイルを選択してください。",
+      readSaveError: "{file} を読み込みまたは保存できませんでした。",
+      addedCount: "{count}件の攻略チャートを追加しました。",
+      titleRequired: "ゲームタイトルを入力してください。",
+      saved: "変更を保存しました。",
+      saveError: "保存できませんでした。保存容量をご確認ください。",
+      unrestrictedConfirm: "このHTMLを制限なしで実行します。\n\n信頼できないHTMLには、危険なJavaScriptが含まれている可能性があります。\n自分で作成した、または信頼できるファイルだけを開いてください。\n\n続けますか？",
+      deleteConfirm: "「{title}」を削除しますか？\n\nHTML本体・ジャケット画像・メモが削除されます。",
+      deleted: "「{title}」を削除しました。",
+      deleteError: "削除できませんでした。もう一度お試しください。",
+      backupAppName: "攻略チャート・ライブラリ",
+      backupFilenamePrefix: "攻略チャート・バックアップ",
+      backupExported: "バックアップを書き出しました。",
+      untitled: "無題の攻略チャート",
+      importedCount: "{count}件を読み込みました。",
+      backupImportError: "バックアップ形式を読み込めませんでした。",
+      selectImageError: "画像ファイルを選択してください。",
+      imageTooLarge: "画像は12MB以下にしてください。",
+      noDataDelete: "削除するデータがありません。",
+      clearAllConfirm: "登録済みの{count}件をすべて削除しますか？\nこの操作は元に戻せません。",
+      finalBackupConfirm: "最終確認：バックアップ済みですか？",
+      clearedAll: "全データを削除しました。",
+      storageInitTitle: "保存機能を開始できませんでした",
+      storageInitText: "通常モードのChrome、Edge、Firefox、Safariで開いてください。",
+      dbError: "ブラウザのデータベース機能を利用できません。",
+      defaultGuideTitle: "攻略チャート"
+    },
+    en: {
+      documentTitle: "Game Walkthrough Library",
+      brandTitle: "Game Walkthrough Library",
+      brandSubtitle: "Manage HTML game guides in one place",
+      searchPlaceholder: "Search games, tags, and notes",
+      clearSearch: "Clear search",
+      addHtml: "+ Add HTML",
+      menu: "Menu",
+      exportBackup: "Export backup",
+      importBackup: "Import backup",
+      clearAll: "Delete all data",
+      heroTitle: "One shelf for every walkthrough.",
+      heroText: "Save and organize your HTML walkthroughs and cover images directly in your browser.",
+      totalTitles: "Titles",
+      favorites: "Favorites",
+      dropTitle: "Drop HTML files here",
+      dropText: "Multiple files supported. Self-contained HTML with embedded images and CSS is recommended.",
+      selectFile: "Choose files",
+      filterAria: "Filter",
+      filterAll: "All",
+      filterFavorite: "Favorites",
+      filterWithCover: "With cover",
+      filterWithoutCover: "Without cover",
+      sortAria: "Sort",
+      sortUpdated: "Recently updated",
+      sortCreated: "Recently added",
+      sortTitleAsc: "Title A-Z",
+      sortTitleDesc: "Title Z-A",
+      viewAria: "Change view",
+      gridView: "Grid view",
+      listView: "List view",
+      editHeading: "Edit walkthrough",
+      coverUnset: "No cover image",
+      coverPreviewAlt: "Cover image preview",
+      chooseImage: "Choose image",
+      removeImage: "Remove image",
+      gameTitle: "Game title",
+      platform: "Platform",
+      platformPlaceholder: "Example: Steam / PS5 / Switch",
+      tags: "Tags",
+      tagsPlaceholder: "Example: Mystery, RPG, Complete guide (comma-separated)",
+      notes: "Notes",
+      notesPlaceholder: "Version differences, progress, cautions, etc.",
+      editHint: "The original HTML is stored unchanged. The title is detected from the HTML <title> or first <h1> element.",
+      cancel: "Cancel",
+      save: "Save",
+      viewerDefaultTitle: "Walkthrough",
+      openUnrestricted: "Open unrestricted",
+      openUnrestrictedTitle: "Open walkthrough HTML without sandbox restrictions",
+      downloadHtml: "Save HTML",
+      viewerNote: "The in-app viewer uses restrictions for safety. If progress saving or other features do not work, use “Open unrestricted.”",
+      viewerFrameTitle: "Walkthrough preview",
+      languageButton: "日本語",
+      languageButtonLabel: "日本語に切り替える",
+      storagePrefix: "Stored in browser · approx.",
+      used: "used",
+      emptyFilteredTitle: "No walkthroughs match your filters",
+      emptyNoneTitle: "No walkthroughs yet",
+      emptyFilteredText: "Change the search text or filters.",
+      emptyNoneText: "Add an HTML file and it will appear here with its cover image.",
+      coverAlt: "Cover for {title}",
+      platformUnset: "Platform not set",
+      open: "Open",
+      edit: "Edit",
+      delete: "Delete",
+      favorite: "Favorite",
+      deleteAria: "Delete this walkthrough",
+      selectHtmlError: "Choose an HTML file.",
+      readSaveError: "Could not read or save {file}.",
+      addedCount: "Added {count} walkthrough(s).",
+      titleRequired: "Enter a game title.",
+      saved: "Changes saved.",
+      saveError: "Could not save. Check your browser storage capacity.",
+      unrestrictedConfirm: "This HTML will run without sandbox restrictions.\n\nUntrusted HTML may contain dangerous JavaScript.\nOnly open files you created or trust.\n\nContinue?",
+      deleteConfirm: "Delete “{title}”?\n\nThe HTML, cover image, and notes will be removed.",
+      deleted: "Deleted “{title}”.",
+      deleteError: "Could not delete the walkthrough. Try again.",
+      backupAppName: "Game Walkthrough Library",
+      backupFilenamePrefix: "game-walkthrough-backup",
+      backupExported: "Backup exported.",
+      untitled: "Untitled walkthrough",
+      importedCount: "Imported {count} walkthrough(s).",
+      backupImportError: "Could not read this backup format.",
+      selectImageError: "Choose an image file.",
+      imageTooLarge: "The image must be 12 MB or smaller.",
+      noDataDelete: "There is no data to delete.",
+      clearAllConfirm: "Delete all {count} saved walkthroughs?\nThis cannot be undone.",
+      finalBackupConfirm: "Final check: Have you created a backup?",
+      clearedAll: "All data deleted.",
+      storageInitTitle: "Storage could not be started",
+      storageInitText: "Open this page in a normal Chrome, Edge, Firefox, or Safari window.",
+      dbError: "This browser's database feature is unavailable.",
+      defaultGuideTitle: "Walkthrough"
+    }
+  };
+
+  function t(key, values = {}) {
+    const table = translations[state.language] || translations.ja;
+    let value = table[key] ?? translations.ja[key] ?? key;
+    for (const [name, replacement] of Object.entries(values)) {
+      value = value.replaceAll(`{${name}}`, String(replacement));
+    }
+    return value;
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = state.language;
+    document.title = t("documentTitle");
+    document.querySelector(".brand h1").textContent = t("brandTitle");
+    document.querySelector(".brand p").textContent = t("brandSubtitle");
+    els.searchInput.placeholder = t("searchPlaceholder");
+    els.clearSearch.setAttribute("aria-label", t("clearSearch"));
+    els.addButton.textContent = t("addHtml");
+    els.mobileAdd.setAttribute("aria-label", t("addHtml"));
+    els.languageButton.textContent = t("languageButton");
+    els.languageButton.title = t("languageButtonLabel");
+    els.languageButton.setAttribute("aria-label", t("languageButtonLabel"));
+    els.menuButton.setAttribute("aria-label", t("menu"));
+    els.exportButton.textContent = t("exportBackup");
+    els.importButton.textContent = t("importBackup");
+    els.clearAllButton.textContent = t("clearAll");
+    document.querySelector(".hero h2").textContent = t("heroTitle");
+    document.querySelector(".hero p").textContent = t("heroText");
+    document.querySelector(".stat:nth-child(1) span").textContent = t("totalTitles");
+    document.querySelector(".stat:nth-child(2) span").textContent = t("favorites");
+    document.querySelector(".drop-info b").textContent = t("dropTitle");
+    document.querySelector(".drop-info span").textContent = t("dropText");
+    els.dropSelectButton.textContent = t("selectFile");
+    els.filterSelect.setAttribute("aria-label", t("filterAria"));
+    els.filterSelect.options[0].textContent = t("filterAll");
+    els.filterSelect.options[1].textContent = t("filterFavorite");
+    els.filterSelect.options[2].textContent = t("filterWithCover");
+    els.filterSelect.options[3].textContent = t("filterWithoutCover");
+    els.sortSelect.setAttribute("aria-label", t("sortAria"));
+    els.sortSelect.options[0].textContent = t("sortUpdated");
+    els.sortSelect.options[1].textContent = t("sortCreated");
+    els.sortSelect.options[2].textContent = t("sortTitleAsc");
+    els.sortSelect.options[3].textContent = t("sortTitleDesc");
+    document.querySelector(".view-switch").setAttribute("aria-label", t("viewAria"));
+    els.gridView.title = t("gridView");
+    els.listView.title = t("listView");
+    document.querySelector("#editModal .dialog-header h2").textContent = t("editHeading");
+    document.querySelector("#editPlaceholder span").textContent = t("coverUnset");
+    els.editCoverPreview.alt = t("coverPreviewAlt");
+    els.chooseCoverButton.textContent = t("chooseImage");
+    els.removeCoverButton.textContent = t("removeImage");
+    document.querySelector('label[for="titleInput"]').textContent = t("gameTitle");
+    document.querySelector('label[for="platformInput"]').textContent = t("platform");
+    document.querySelector('label[for="tagsInput"]').textContent = t("tags");
+    document.querySelector('label[for="notesInput"]').textContent = t("notes");
+    els.platformInput.placeholder = t("platformPlaceholder");
+    els.tagsInput.placeholder = t("tagsPlaceholder");
+    els.notesInput.placeholder = t("notesPlaceholder");
+    document.querySelector("#editModal .hint").textContent = t("editHint");
+    document.querySelector('#editModal [data-close="editModal"].btn').textContent = t("cancel");
+    els.saveEditButton.textContent = t("save");
+    if (!state.viewingId) els.viewerTitle.textContent = t("viewerDefaultTitle");
+    els.openNewTabButton.querySelector(".label").textContent = state.language === "ja" ? "制限なしで" : "Open unrestricted";
+    const labelTail = [...els.openNewTabButton.childNodes].find(node => node.nodeType === Node.TEXT_NODE);
+    if (labelTail) labelTail.textContent = state.language === "ja" ? "開く" : "";
+    els.openNewTabButton.title = t("openUnrestrictedTitle");
+    els.downloadHtmlButton.textContent = t("downloadHtml");
+    document.querySelector(".viewer-note").textContent = t("viewerNote");
+    els.viewerFrame.title = t("viewerFrameTitle");
+  }
 
   let db;
 
@@ -531,7 +796,8 @@
 
   function formatDate(timestamp) {
     try {
-      return new Intl.DateTimeFormat("ja-JP", { year:"numeric", month:"short", day:"numeric" }).format(new Date(timestamp));
+      const locale = state.language === "en" ? "en-US" : "ja-JP";
+      return new Intl.DateTimeFormat(locale, { year:"numeric", month:"short", day:"numeric" }).format(new Date(timestamp));
     } catch { return ""; }
   }
 
@@ -608,11 +874,11 @@
 
   function updateStorageInfo() {
     const bytes = state.guides.reduce((sum, g) => sum + (g.html?.length || 0) * 2 + (g.cover?.length || 0) * 2, 0);
-    let label;
-    if (bytes === 0) label = "0 KB 使用";
-    else if (bytes < 1024 * 1024) label = `${Math.max(1, Math.round(bytes / 1024))} KB 使用`;
-    else label = `${(bytes / 1024 / 1024).toFixed(1)} MB 使用`;
-    els.storageInfo.textContent = `ブラウザ内保存・約 ${label}`;
+    let size;
+    if (bytes === 0) size = "0 KB";
+    else if (bytes < 1024 * 1024) size = `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    else size = `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+    els.storageInfo.textContent = `${t("storagePrefix")} ${size} ${t("used")}`;
   }
 
   function getVisibleGuides() {
@@ -644,33 +910,33 @@
 
     if (!list.length) {
       const hasAny = state.guides.length > 0;
-      els.library.innerHTML = `<div class="empty"><span class="big">${hasAny ? "🔎" : "📚"}</span><b>${hasAny ? "条件に一致する攻略チャートがありません" : "攻略チャートはまだありません"}</b><p>${hasAny ? "検索語や絞り込みを変更してください。" : "HTMLファイルを追加すると、ここにジャケット付きで並びます。"}</p></div>`;
+      els.library.innerHTML = `<div class="empty"><span class="big">${hasAny ? "🔎" : "📚"}</span><b>${hasAny ? t("emptyFilteredTitle") : t("emptyNoneTitle")}</b><p>${hasAny ? t("emptyFilteredText") : t("emptyNoneText")}</p></div>`;
       return;
     }
 
     els.library.innerHTML = list.map(g => {
       const cover = g.cover
-        ? `<img src="${escapeHTML(g.cover)}" alt="${escapeHTML(g.title)}のジャケット" loading="lazy">`
-        : `<div class="placeholder"><div class="gamepad">🎮</div><span>ジャケット未設定</span></div>`;
+        ? `<img src="${escapeHTML(g.cover)}" alt="${escapeHTML(t("coverAlt", {title:g.title}))}" loading="lazy">`
+        : `<div class="placeholder"><div class="gamepad">🎮</div><span>${t("coverUnset")}</span></div>`;
       const tags = (g.tags || []).slice(0, 3).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join("");
       return `<article class="card" data-id="${escapeHTML(g.id)}">
         <div class="cover">
           ${cover}
           <div class="badge-row">
             <span class="badge">HTML</span>
-            <button class="favorite ${g.favorite ? "on" : ""}" data-action="favorite" title="お気に入り">${g.favorite ? "★" : "☆"}</button>
+            <button class="favorite ${g.favorite ? "on" : ""}" data-action="favorite" title="${t("favorite")}">${g.favorite ? "★" : "☆"}</button>
           </div>
         </div>
         <div class="card-body">
           <div>
             <h3 title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</h3>
-            <div class="meta"><span>${escapeHTML(g.platform || "機種未設定")}</span><span>・</span><span>${formatDate(g.updatedAt)}</span></div>
+            <div class="meta"><span>${escapeHTML(g.platform || t("platformUnset"))}</span><span>・</span><span>${formatDate(g.updatedAt)}</span></div>
             <div class="tag-list">${tags}</div>
           </div>
           <div class="card-actions">
-            <button class="btn small primary" data-action="view">開く</button>
-            <button class="btn small edit-btn" data-action="edit" title="編集">編集</button>
-            <button class="btn small danger delete-btn" data-action="delete" title="削除" aria-label="この攻略チャートを削除">削除</button>
+            <button class="btn small primary" data-action="view">${t("open")}</button>
+            <button class="btn small edit-btn" data-action="edit" title="${t("edit")}">${t("edit")}</button>
+            <button class="btn small danger delete-btn" data-action="delete" title="${t("delete")}" aria-label="${t("deleteAria")}">${t("delete")}</button>
           </div>
         </div>
       </article>`;
@@ -679,7 +945,7 @@
 
   async function addFiles(files) {
     const htmlFiles = [...files].filter(f => /\.html?$/i.test(f.name) || f.type === "text/html");
-    if (!htmlFiles.length) return toast("HTMLファイルを選択してください。", "error");
+    if (!htmlFiles.length) return toast(t("selectHtmlError"), "error");
     let added = 0;
     let lastAddedId = null;
     for (const file of htmlFiles) {
@@ -705,12 +971,12 @@
         added++;
       } catch (error) {
         console.error(error);
-        toast(`${file.name} を読み込みまたは保存できませんでした。`, "error");
+        toast(t("readSaveError", {file:file.name}), "error");
       }
     }
     els.htmlInput.value = "";
     await refresh();
-    if (added > 0) toast(`${added}件の攻略チャートを追加しました。`);
+    if (added > 0) toast(t("addedCount", {count:added}));
     if (added === 1 && lastAddedId) openEditor(lastAddedId);
   }
 
@@ -739,7 +1005,7 @@
     const guide = state.guides.find(g => g.id === state.editingId);
     if (!guide) return;
     const title = els.titleInput.value.trim();
-    if (!title) return toast("ゲームタイトルを入力してください。", "error");
+    if (!title) return toast(t("titleRequired"), "error");
     const updated = {
       ...guide,
       title,
@@ -753,10 +1019,10 @@
       await putGuide(updated);
       closeModal(els.editModal);
       await refresh();
-      toast("変更を保存しました。");
+      toast(t("saved"));
     } catch (err) {
       console.error(err);
-      toast("保存できませんでした。保存容量をご確認ください。", "error");
+      toast(t("saveError"), "error");
     }
   }
 
@@ -798,12 +1064,7 @@
     const guide = state.guides.find(g => g.id === state.viewingId);
     if (!guide) return;
 
-    const approved = confirm(
-      "このHTMLを制限なしで実行します。\n\n" +
-      "信頼できないHTMLには、危険なJavaScriptが含まれている可能性があります。\n" +
-      "自分で作成した、または信頼できるファイルだけを開いてください。\n\n" +
-      "続けますか？"
-    );
+    const approved = confirm(t("unrestrictedConfirm"));
     if (!approved) return;
 
     const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
@@ -831,31 +1092,31 @@
     if (action === "delete") {
       const guide = state.guides.find(g => g.id === guideId);
       if (!guide) return;
-      const approved = confirm(`「${guide.title}」を削除しますか？\n\nHTML本体・ジャケット画像・メモが削除されます。`);
+      const approved = confirm(t("deleteConfirm", {title:guide.title}));
       if (!approved) return;
       try {
         await deleteGuide(guideId);
         if (state.editingId === guideId) state.editingId = null;
         if (state.viewingId === guideId) state.viewingId = null;
         await refresh();
-        toast(`「${guide.title}」を削除しました。`);
+        toast(t("deleted", {title:guide.title}));
       } catch (error) {
         console.error(error);
-        toast("削除できませんでした。もう一度お試しください。", "error");
+        toast(t("deleteError"), "error");
       }
     }
   }
 
   async function exportBackup() {
     const payload = {
-      app: "攻略チャート・ライブラリ",
+      app: t("backupAppName"),
       version: 2,
       exportedAt: new Date().toISOString(),
       guides: state.guides
     };
-    downloadBlob(JSON.stringify(payload, null, 2), "application/json;charset=utf-8", `攻略チャート・バックアップ_${localDateStamp()}.json`);
+    downloadBlob(JSON.stringify(payload, null, 2), "application/json;charset=utf-8", `${t("backupFilenamePrefix")}_${localDateStamp()}.json`);
     els.dropdown.classList.remove("open");
-    toast("バックアップを書き出しました。");
+    toast(t("backupExported"));
   }
 
   async function importBackup(file) {
@@ -869,7 +1130,7 @@
         const now = Date.now();
         const guide = {
           id: raw.id || id(),
-          title: String(raw.title || "無題の攻略チャート").slice(0,120),
+          title: String(raw.title || t("untitled")).slice(0,120),
           platform: String(raw.platform || "").slice(0,80),
           tags: Array.isArray(raw.tags) ? raw.tags.map(String).slice(0,12) : [],
           notes: String(raw.notes || "").slice(0,1000),
@@ -884,23 +1145,30 @@
         count++;
       }
       await refresh();
-      toast(`${count}件を読み込みました。`);
+      toast(t("importedCount", {count}));
     } catch (err) {
       console.error(err);
-      toast("バックアップ形式を読み込めませんでした。", "error");
+      toast(t("backupImportError"), "error");
     } finally {
       els.backupInput.value = "";
     }
   }
 
   function bindEvents() {
+    els.languageButton.addEventListener("click", () => {
+      state.language = state.language === "ja" ? "en" : "ja";
+      safeStorageSet("gwl-language", state.language);
+      applyLanguage();
+      render();
+      updateStorageInfo();
+    });
     [els.addButton, els.mobileAdd, els.dropSelectButton].forEach(b => b.addEventListener("click", () => els.htmlInput.click()));
     els.htmlInput.addEventListener("change", e => addFiles(e.target.files));
     els.coverInput.addEventListener("change", async e => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (!file.type.startsWith("image/")) return toast("画像ファイルを選択してください。", "error");
-      if (file.size > 12 * 1024 * 1024) return toast("画像は12MB以下にしてください。", "error");
+      if (!file.type.startsWith("image/")) return toast(t("selectImageError"), "error");
+      if (file.size > 12 * 1024 * 1024) return toast(t("imageTooLarge"), "error");
       state.pendingCover = await fileToDataURL(file);
       state.pendingCoverChanged = true;
       setCoverPreview(state.pendingCover);
@@ -954,16 +1222,17 @@
     els.backupInput.addEventListener("change", e => { if (e.target.files?.[0]) importBackup(e.target.files[0]); });
     els.clearAllButton.addEventListener("click", async () => {
       els.dropdown.classList.remove("open");
-      if (!state.guides.length) return toast("削除するデータがありません。", "error");
-      if (!confirm(`登録済みの${state.guides.length}件をすべて削除しますか？\nこの操作は元に戻せません。`)) return;
-      if (!confirm("最終確認：バックアップ済みですか？")) return;
+      if (!state.guides.length) return toast(t("noDataDelete"), "error");
+      if (!confirm(t("clearAllConfirm", {count:state.guides.length}))) return;
+      if (!confirm(t("finalBackupConfirm"))) return;
       await clearGuides();
       await refresh();
-      toast("全データを削除しました。");
+      toast(t("clearedAll"));
     });
   }
 
   async function init() {
+    applyLanguage();
     try {
       if (!("indexedDB" in window)) throw new Error("IndexedDB unsupported");
       await openDB();
@@ -971,8 +1240,8 @@
       await refresh();
     } catch (err) {
       console.error(err);
-      els.library.innerHTML = `<div class="empty"><span class="big">⚠️</span><b>保存機能を開始できませんでした</b><p>通常モードのChrome、Edge、Firefox、Safariで開いてください。</p></div>`;
-      toast("ブラウザのデータベース機能を利用できません。", "error");
+      els.library.innerHTML = `<div class="empty"><span class="big">⚠️</span><b>${t("storageInitTitle")}</b><p>${t("storageInitText")}</p></div>`;
+      toast(t("dbError"), "error");
     }
   }
 
