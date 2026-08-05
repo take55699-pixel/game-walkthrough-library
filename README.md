@@ -8,6 +8,8 @@ A local-first web app for organizing self-contained HTML game walkthroughs.
 
 https://take55699-pixel.github.io/game-walkthrough-library/
 
+![Game Walkthrough Library screenshot](screenshot.png)
+
 ## Features
 
 - HTMLファイルの追加
@@ -33,7 +35,7 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 信頼できないHTMLファイルを開かないでください。
 
 追加したHTMLにはJavaScriptが含まれている可能性があります。
-「完全表示で開く」を使用すると、HTML内のプログラムが制限なしで動作する場合があります。
+「制限なしで開く」を使用すると、HTML内のプログラムが制限なしで動作する場合があります。
 
 ## License
 
