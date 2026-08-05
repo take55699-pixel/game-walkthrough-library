@@ -370,7 +370,7 @@
     <div class="dialog-header">
       <h2 id="viewerTitle">攻略チャート</h2>
       <div class="viewer-toolbar">
-        <button class="btn small" id="openNewTabButton" title="攻略HTMLを制限なしで開く"><span class="label">完全表示で</span>開く</button>
+        <button class="btn small" id="openNewTabButton" title="攻略HTMLを制限なしで開く"><span class="label">制限なしで</span>開く</button>
         <button class="btn small" id="downloadHtmlButton">HTML保存</button>
         <button class="close" data-close="viewerModal">×</button>
       </div>
@@ -797,6 +797,15 @@
   function openCurrentInNewTab() {
     const guide = state.guides.find(g => g.id === state.viewingId);
     if (!guide) return;
+
+    const approved = confirm(
+      "このHTMLを制限なしで実行します。\n\n" +
+      "信頼できないHTMLには、危険なJavaScriptが含まれている可能性があります。\n" +
+      "自分で作成した、または信頼できるファイルだけを開いてください。\n\n" +
+      "続けますか？"
+    );
+    if (!approved) return;
+
     const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
