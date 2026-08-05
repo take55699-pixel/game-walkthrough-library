@@ -26,6 +26,8 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 - ブラウザ内へのローカル保存
 - バックアップの書き出し・読み込み
 - スマートフォン対応
+- 日本語 / English 表示切替
+- 選択した言語をブラウザに保存
 
 ## How to Use
 
