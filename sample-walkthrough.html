@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時計仕掛けの館｜サンプル攻略</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      --bg:#08101d;
+      --panel:#101b2d;
+      --panel2:#172640;
+      --text:#f4f7ff;
+      --muted:#a9b5c8;
+      --accent:#8d83ff;
+      --line:#2b3d5d;
+      --ok:#52d6a4;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(141,131,255,.18),transparent 34%),
+        var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;
+      line-height:1.7;
+    }
+    main{max-width:900px;margin:auto;padding:40px 20px 80px}
+    header{
+      padding:28px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:linear-gradient(145deg,var(--panel2),var(--panel));
+      margin-bottom:24px;
+    }
+    h1{margin:0 0 8px;font-size:clamp(28px,5vw,46px)}
+    .lead{margin:0;color:var(--muted)}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+    .badge{
+      padding:5px 10px;
+      border-radius:999px;
+      background:rgba(141,131,255,.13);
+      border:1px solid rgba(141,131,255,.28);
+      font-size:13px;
+    }
+    section{
+      margin-top:18px;
+      padding:22px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(16,27,45,.88);
+    }
+    h2{margin:0 0 14px;font-size:22px}
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:13px 0;
+      border-top:1px solid rgba(255,255,255,.07);
+    }
+    .step:first-of-type{border-top:0}
+    input[type="checkbox"]{width:20px;height:20px;margin-top:4px;accent-color:var(--accent)}
+    label{cursor:pointer;flex:1}
+    label strong{display:block}
+    label span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+    .tip{
+      border-left:4px solid var(--ok);
+      padding:12px 14px;
+      background:rgba(82,214,164,.08);
+      border-radius:8px;
+      color:#dffbef;
+      margin-top:16px;
+    }
+    footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>時計仕掛けの館</h1>
+    <p class="lead">Game Walkthrough Libraryを試すための、架空ゲームのサンプル攻略です。</p>
+    <div class="meta">
+      <span class="badge">サンプル</span>
+      <span class="badge">推理</span>
+      <span class="badge">約5分</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>第1章：玄関ホール</h2>
+
+    <div class="step">
+      <input id="s1" type="checkbox">
+      <label for="s1">
+        <strong>机の上の手紙を調べる</strong>
+        <span>「時計は11時55分で止まった」という手がかりを入手します。</span>
+      </label>
+    </div>
+
+    <div class="step">
+      <input id="s2" type="checkbox">
+      <label for="s2">
+        <strong>大時計の針を11時55分に合わせる</strong>
+        <span>時計の下にある小さな引き出しが開きます。</span>
+      </label>
+    </div>
+
+    <div class="step">
+      <input id="s3" type="checkbox">
+      <label for="s3">
+        <strong>引き出しから銀色の鍵を取る</strong>
+        <span>鍵は2階の書斎で使用します。</span>
+      </label>
+    </div>
+
+    <div class="tip">ヒント：先に手紙を読まないと、時計の正しい時刻は分かりません。</div>
+  </section>
+
+  <section>
+    <h2>第2章：2階の書斎</h2>
+
+    <div class="step">
+      <input id="s4" type="checkbox">
+      <label for="s4">
+        <strong>銀色の鍵で机を開ける</strong>
+        <span>中から歯車と青いメモを入手します。</span>
+      </label>
+    </div>
+
+    <div class="step">
+      <input id="s5" type="checkbox">
+      <label for="s5">
+        <strong>壁の装置に歯車を取り付ける</strong>
+        <span>青いメモの順番どおりに、左・右・中央のレバーを操作します。</span>
+      </label>
+    </div>
+
+    <div class="step">
+      <input id="s6" type="checkbox">
+      <label for="s6">
+        <strong>隠し扉から脱出する</strong>
+        <span>これでサンプル攻略は完了です。</span>
+      </label>
+    </div>
+  </section>
+
+  <footer>Fictional sample walkthrough for Game Walkthrough Library.</footer>
+</main>
+</body>
+</html>
