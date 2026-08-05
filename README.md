@@ -10,6 +10,12 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 
 ![Game Walkthrough Library screenshot](screenshot.png)
 
+## Sample Walkthrough
+
+[サンプル攻略HTMLを開く](sample-walkthrough.html)
+
+このファイルを保存して、Game Walkthrough Libraryの「HTMLを追加」から読み込んでください。
+
 ## Features
 
 - HTMLファイルの追加
