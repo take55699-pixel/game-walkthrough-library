@@ -10,11 +10,13 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 
 ![Game Walkthrough Library screenshot](screenshot.png)
 
-## Sample Walkthrough
+## Try the Built-in Sample
 
-[サンプル攻略HTMLを開く](sample-walkthrough.html)
+デモを開き、攻略が0件のときに表示される「サンプルを試す」を押してください。
 
-このファイルを保存して、Game Walkthrough Libraryの「HTMLを追加」から読み込んでください。
+英語表示では「Try sample」と表示されます。
+
+別のファイルをダウンロードしなくても、サンプル攻略をすぐに試せます。
 
 ## Features
 
