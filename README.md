@@ -1,8 +1,8 @@
 # Game Walkthrough Library
 
-A local-first web app for organizing self-contained HTML game walkthroughs.
+Organize and open your HTML game walkthroughs directly in your browser — no account, installation, or server upload required.
 
-ゲーム攻略HTMLを、ブラウザ内で保存・検索・整理できるWebアプリです。
+アカウント登録・インストール・外部アップロードなしで、ゲーム攻略HTMLをブラウザ内に保存・検索・整理できます。
 
 ## Demo
 
