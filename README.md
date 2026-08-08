@@ -1,8 +1,10 @@
 # Game Walkthrough Library
 
+**English** | [日本語](README.ja.md)
+
 Organize and open your HTML game walkthroughs directly in your browser — no account, installation, or server upload required.
 
-アカウント登録・インストール・外部アップロードなしで、ゲーム攻略HTMLをブラウザ内に保存・検索・整理できます。
+Game Walkthrough Library is a local-first static web app for storing, searching, and organizing self-contained HTML walkthroughs and cover images.
 
 ## Demo
 
@@ -10,43 +12,50 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 
 ![Game Walkthrough Library screenshot](screenshot.png)
 
-## Try the Built-in Sample
+## Try it instantly
 
-デモを開き、攻略が0件のときに表示される「サンプルを試す」を押してください。
-
-英語表示では「Try sample」と表示されます。
-
-別のファイルをダウンロードしなくても、サンプル攻略をすぐに試せます。
+Open the demo and press **Try sample** when the library is empty. A built-in fictional walkthrough is added and opened automatically, so you can test the app without downloading a separate file.
 
 ## Features
 
-- HTMLファイルの追加
-- ゲームタイトルの自動取得
-- ジャケット画像の設定
-- 検索・絞り込み・並べ替え
-- お気に入り登録
-- ブラウザ内へのローカル保存
-- バックアップの書き出し・読み込み
-- スマートフォン対応
-- 日本語 / English 表示切替
-- 選択した言語をブラウザに保存
+- Add HTML walkthrough files
+- Automatically detect game titles
+- Add cover images
+- Search, filter, and sort walkthroughs
+- Mark favorites
+- Store data locally in the browser
+- Export and import backups
+- Mobile-friendly interface
+- Japanese / English UI switching
+- Remember the selected language
+- Built-in sample walkthrough
 
-## How to Use
+## How to use
 
-1. Demoページを開きます。
-2. 「HTMLを追加」を押します。
-3. 攻略チャートのHTMLファイルを選びます。
-4. タイトルやジャケット画像を設定します。
+1. Open the demo.
+2. Press **Add HTML**.
+3. Choose a walkthrough HTML file.
+4. Set the title, platform, tags, notes, and cover image as needed.
+5. Export a backup if the data matters to you.
 
-データは基本的に使用中のブラウザ内に保存されます。
+## Local data and backups
+
+Walkthrough HTML, cover images, notes, and related metadata are stored locally in the browser using IndexedDB. The app does not require an account and does not upload your walkthrough library to a server.
+
+**Important:** clearing site data, resetting the browser profile, or losing the device can permanently remove locally stored data. Export backups regularly for anything you do not want to lose.
 
 ## Security
 
-信頼できないHTMLファイルを開かないでください。
+Do not import HTML from sources you do not trust. Imported walkthroughs may contain JavaScript.
 
-追加したHTMLにはJavaScriptが含まれている可能性があります。
-「制限なしで開く」を使用すると、HTML内のプログラムが制限なしで動作する場合があります。
+The in-app viewer uses a sandboxed iframe to restrict imported HTML. If a walkthrough needs capabilities blocked by the sandbox, save the HTML file and inspect/open it separately only when you trust its source.
+
+See [SECURITY.md](SECURITY.md) for the security model and vulnerability reporting guidance.
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
 
 ## License
 
-MIT License
+[MIT License](LICENSE)
