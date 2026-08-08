@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Game Walkthrough Library: built-in sample edition v0.3.0 -->
+<!-- Game Walkthrough Library: security-hardened edition v0.3.1 -->
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -373,12 +373,11 @@
     <div class="dialog-header">
       <h2 id="viewerTitle">攻略チャート</h2>
       <div class="viewer-toolbar">
-        <button class="btn small" id="openNewTabButton" title="攻略HTMLを制限なしで開く"><span class="label">制限なしで</span>開く</button>
         <button class="btn small" id="downloadHtmlButton">HTML保存</button>
         <button class="close" data-close="viewerModal">×</button>
       </div>
     </div>
-    <div class="viewer-note">アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「制限なしで開く」を使用してください。</div>
+    <div class="viewer-note">アプリ内表示は安全性を優先した制限表示です。制限により動作しないHTMLは「HTML保存」で保存し、信頼できる内容か確認したうえでアプリとは別に開いてください。</div>
     <iframe class="viewer-frame" id="viewerFrame" title="攻略チャート表示" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe>
   </div>
 </div>
@@ -460,7 +459,6 @@
     viewerModal: $("#viewerModal"),
     viewerTitle: $("#viewerTitle"),
     viewerFrame: $("#viewerFrame"),
-    openNewTabButton: $("#openNewTabButton"),
     downloadHtmlButton: $("#downloadHtmlButton"),
     menuButton: $("#menuButton"),
     dropdown: $("#dropdown"),
@@ -518,10 +516,8 @@
       cancel: "キャンセル",
       save: "保存",
       viewerDefaultTitle: "攻略チャート",
-      openUnrestricted: "制限なしで開く",
-      openUnrestrictedTitle: "攻略HTMLを制限なしで開く",
       downloadHtml: "HTML保存",
-      viewerNote: "アプリ内表示は安全性を優先した制限表示です。攻略HTML内の進捗保存などが動かない場合は「制限なしで開く」を使用してください。",
+      viewerNote: "アプリ内表示は安全性を優先した制限表示です。制限により動作しないHTMLは「HTML保存」で保存し、信頼できる内容か確認したうえでアプリとは別に開いてください。",
       viewerFrameTitle: "攻略チャート表示",
       languageButton: "EN",
       languageButtonLabel: "Switch to English",
@@ -548,7 +544,6 @@
       titleRequired: "ゲームタイトルを入力してください。",
       saved: "変更を保存しました。",
       saveError: "保存できませんでした。保存容量をご確認ください。",
-      unrestrictedConfirm: "このHTMLを制限なしで実行します。\n\n信頼できないHTMLには、危険なJavaScriptが含まれている可能性があります。\n自分で作成した、または信頼できるファイルだけを開いてください。\n\n続けますか？",
       deleteConfirm: "「{title}」を削除しますか？\n\nHTML本体・ジャケット画像・メモが削除されます。",
       deleted: "「{title}」を削除しました。",
       deleteError: "削除できませんでした。もう一度お試しください。",
@@ -616,10 +611,8 @@
       cancel: "Cancel",
       save: "Save",
       viewerDefaultTitle: "Walkthrough",
-      openUnrestricted: "Open unrestricted",
-      openUnrestrictedTitle: "Open walkthrough HTML without sandbox restrictions",
       downloadHtml: "Save HTML",
-      viewerNote: "The in-app viewer uses restrictions for safety. If progress saving or other features do not work, use “Open unrestricted.”",
+      viewerNote: "The in-app viewer is sandboxed for safety. If a walkthrough needs blocked capabilities, save the HTML and inspect/open it separately only if you trust its source.",
       viewerFrameTitle: "Walkthrough preview",
       languageButton: "日本語",
       languageButtonLabel: "日本語に切り替える",
@@ -646,7 +639,6 @@
       titleRequired: "Enter a game title.",
       saved: "Changes saved.",
       saveError: "Could not save. Check your browser storage capacity.",
-      unrestrictedConfirm: "This HTML will run without sandbox restrictions.\n\nUntrusted HTML may contain dangerous JavaScript.\nOnly open files you created or trust.\n\nContinue?",
       deleteConfirm: "Delete “{title}”?\n\nThe HTML, cover image, and notes will be removed.",
       deleted: "Deleted “{title}”.",
       deleteError: "Could not delete the walkthrough. Try again.",
@@ -730,10 +722,6 @@
     document.querySelector('#editModal [data-close="editModal"].btn').textContent = t("cancel");
     els.saveEditButton.textContent = t("save");
     if (!state.viewingId) els.viewerTitle.textContent = t("viewerDefaultTitle");
-    els.openNewTabButton.querySelector(".label").textContent = state.language === "ja" ? "制限なしで" : "Open unrestricted";
-    const labelTail = [...els.openNewTabButton.childNodes].find(node => node.nodeType === Node.TEXT_NODE);
-    if (labelTail) labelTail.textContent = state.language === "ja" ? "開く" : "";
-    els.openNewTabButton.title = t("openUnrestrictedTitle");
     els.downloadHtmlButton.textContent = t("downloadHtml");
     document.querySelector(".viewer-note").textContent = t("viewerNote");
     els.viewerFrame.title = t("viewerFrameTitle");
@@ -1193,25 +1181,6 @@
     downloadBlob(guide.html, "text/html;charset=utf-8", `${safeFilename(guide.title)}.html`);
   }
 
-  function openCurrentInNewTab() {
-    const guide = state.guides.find(g => g.id === state.viewingId);
-    if (!guide) return;
-
-    const approved = confirm(t("unrestrictedConfirm"));
-    if (!approved) return;
-
-    const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
   async function handleCardAction(event) {
     const button = event.target.closest("[data-action]");
     if (!button) return;
@@ -1351,7 +1320,6 @@
     });
 
     els.downloadHtmlButton.addEventListener("click", downloadCurrentHTML);
-    els.openNewTabButton.addEventListener("click", openCurrentInNewTab);
     els.menuButton.addEventListener("click", e => { e.stopPropagation(); els.dropdown.classList.toggle("open"); });
     document.addEventListener("click", e => { if (!e.target.closest(".menu")) els.dropdown.classList.remove("open"); });
     els.exportButton.addEventListener("click", exportBackup);
