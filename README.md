@@ -1,54 +1,58 @@
-# Game Walkthrough Library
+# GAME CODEX
 
 **English** | [日本語](README.ja.md)
 
-Organize and open your HTML game walkthroughs directly in your browser — no account, installation, or server upload required.
+Organize HTML game walkthroughs and walkthrough URLs in one local-first browser library — no account, installation, or server upload required.
 
-Game Walkthrough Library is a local-first static web app for storing, searching, and organizing self-contained HTML walkthroughs and cover images.
+GAME CODEX is a static web app for storing, searching, opening, and maintaining game walkthrough resources directly in your browser.
 
 ## Demo
 
 https://take55699-pixel.github.io/game-walkthrough-library/
 
-![Game Walkthrough Library screenshot](screenshot.png)
-
-## Try it instantly
-
-Open the demo and press **Try sample** when the library is empty. A built-in fictional walkthrough is added and opened automatically, so you can test the app without downloading a separate file.
-
 ## Features
 
-- Add HTML walkthrough files
-- Automatically detect game titles
-- Add cover images
-- Search, filter, and sort walkthroughs
+- Import self-contained HTML walkthrough files
+- Register `http` / `https` walkthrough URLs
+- Display imported HTML inside a sandboxed viewer
+- Preserve `localStorage`-style walkthrough progress in the app's IndexedDB storage
+- Add cover images, platform information, tags, and notes
+- Search by game name, URL, tags, and notes
+- Filter and sort the library
 - Mark favorites
-- Store data locally in the browser
-- Export and import backups
+- Grid and list views
+- Export and import JSON backups
 - Mobile-friendly interface
-- Japanese / English UI switching
-- Remember the selected language
-- Built-in sample walkthrough
+- Store the library locally in the browser
 
 ## How to use
 
 1. Open the demo.
-2. Press **Add HTML**.
-3. Choose a walkthrough HTML file.
-4. Set the title, platform, tags, notes, and cover image as needed.
-5. Export a backup if the data matters to you.
+2. Press **追加**.
+3. Choose either an HTML walkthrough file or a walkthrough-site URL.
+4. Add the title, platform, tags, notes, and cover image as needed.
+5. Open entries from the library and export backups regularly for important data.
+
+A sample HTML file is included in the repository: [`sample-walkthrough.html`](sample-walkthrough.html).
 
 ## Local data and backups
 
-Walkthrough HTML, cover images, notes, and related metadata are stored locally in the browser using IndexedDB. The app does not require an account and does not upload your walkthrough library to a server.
+Walkthrough HTML, saved progress, cover images, notes, and related metadata are stored locally in the browser using IndexedDB. GAME CODEX does not require an account and does not upload your walkthrough library to an application server.
 
 **Important:** clearing site data, resetting the browser profile, or losing the device can permanently remove locally stored data. Export backups regularly for anything you do not want to lose.
+
+## Web walkthrough URLs
+
+GAME CODEX can store walkthrough-site URLs and attempts to display them in the in-app viewer. Some sites block embedding with `X-Frame-Options` or Content Security Policy. In that case, use **サイトを開く** to open the registered URL in a separate tab.
 
 ## Security
 
 Do not import HTML from sources you do not trust. Imported walkthroughs may contain JavaScript.
 
-The in-app viewer uses a sandboxed iframe to restrict imported HTML. If a walkthrough needs capabilities blocked by the sandbox, save the HTML file and inspect/open it separately only when you trust its source.
+- Imported local HTML is rendered in a sandboxed `iframe` without `allow-same-origin`.
+- Imported local HTML is not opened as a top-level same-origin `blob:` document.
+- Registered external URLs are subject to the destination site's own origin and security policy.
+- If you need to run downloaded HTML outside the sandbox, inspect it first and only open files you trust.
 
 See [SECURITY.md](SECURITY.md) for the security model and vulnerability reporting guidance.
 
