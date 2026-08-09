@@ -1,0 +1,47 @@
+name: Fix GAME CODEX i18n wiring
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-i18n:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix i18n script placement
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          bad = '${guide.html}  <script src="i18n.js"></script>\n</body></html>`;'
+          good = '${guide.html}</body></html>`;'
+          text = text.replace(bad, good)
+
+          tag = '  <script src="i18n.js"></script>\n'
+          before, marker, after = text.rpartition('</body>')
+          if not marker:
+              raise SystemExit('index.html has no closing body tag')
+          if not before.rstrip().endswith('<script src="i18n.js"></script>'):
+              text = before + tag + marker + after
+
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit fix if needed
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No index change needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix GAME CODEX language switch wiring"
+          git push
