@@ -16,17 +16,29 @@ If you discover a vulnerability, contact the maintainer through GitHub using the
 - The security impact
 - A minimal proof of concept when possible
 
-## HTML safety model
+## GAME CODEX security model
 
-Game Walkthrough Library stores imported walkthrough HTML in the user's browser.
+GAME CODEX stores imported walkthrough HTML and related data in the user's browser.
 
-- Imported HTML is shown inside a sandboxed `iframe`.
-- The in-app viewer intentionally restricts capabilities to reduce risk from untrusted HTML.
-- The app does not execute imported walkthrough HTML directly in the application's top-level page context.
-- If a walkthrough requires functionality blocked by the sandbox, download the HTML and inspect/open it separately only if you trust its source.
+### Imported local HTML
 
-Never import or open HTML from an untrusted source without reviewing it first.
+- Imported local HTML is rendered inside a sandboxed `iframe`.
+- The local HTML viewer intentionally omits `allow-same-origin`.
+- Imported local HTML is not promoted to a top-level same-origin `blob:` document.
+- GAME CODEX provides a bridge for selected `localStorage`-style progress data so it can be persisted in the app's IndexedDB without giving imported HTML direct access to the application's origin storage.
+- If a walkthrough requires capabilities blocked by the sandbox, download and inspect the file separately and only open it outside GAME CODEX when you trust its source.
+
+### Registered external URLs
+
+GAME CODEX can also store `http` / `https` walkthrough URLs.
+
+- URL input is restricted to `http` and `https` and rejects URLs containing embedded usernames/passwords.
+- External sites may be embedded only when the destination site's browser security headers permit it.
+- An external URL may use its own origin inside the sandbox; browser same-origin rules still separate it from the GAME CODEX application origin.
+- When an external walkthrough site is opened in a separate tab, the app uses `noopener noreferrer`.
+
+Never import or open content from an untrusted source without reviewing it first.
 
 ## Local data
 
-Walkthroughs, cover images, notes, and preferences are stored locally in the browser. Clearing site data or browser storage can permanently remove this data. Export backups regularly if the data matters to you.
+Walkthrough HTML, progress data, registered URLs, cover images, notes, and preferences are stored locally in the browser. Clearing site data or browser storage can permanently remove this data. Export backups regularly if the data matters to you.
