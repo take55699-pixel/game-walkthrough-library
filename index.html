@@ -1177,8 +1177,7 @@
     if (/<html(?:\s[^>]*)?>/i.test(guide.html)) {
       return guide.html.replace(/(<html(?:\s[^>]*)?>)/i, `$1<head>${bridge}</head>`);
     }
-    return `<!doctype html><html><head>${bridge}</head><body>${guide.html}  <script src="i18n.js"></script>
-</body></html>`;
+    return `<!doctype html><html><head>${bridge}</head><body>${guide.html}</body></html>`;
   }
 
   function persistProgressChange(message) {
@@ -1551,5 +1550,6 @@
   init();
 })();
 </script>
+  <script src="i18n.js"></script>
 </body>
 </html>
