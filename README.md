@@ -21,6 +21,7 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 - Filter and sort the library
 - Mark favorites
 - Grid and list views
+- Japanese / English UI switching with the selected language saved in the browser
 - Export and import JSON backups
 - Mobile-friendly interface
 - Store the library locally in the browser
@@ -28,10 +29,11 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 ## How to use
 
 1. Open the demo.
-2. Press **追加**.
-3. Choose either an HTML walkthrough file or a walkthrough-site URL.
-4. Add the title, platform, tags, notes, and cover image as needed.
-5. Open entries from the library and export backups regularly for important data.
+2. Press **EN** if you want the English interface. The selection is remembered on this browser.
+3. Press **+ Add**.
+4. Choose either an HTML walkthrough file or a walkthrough-site URL.
+5. Add the title, platform, tags, notes, and cover image as needed.
+6. Open entries from the library and export backups regularly for important data.
 
 A sample HTML file is included in the repository: [`sample-walkthrough.html`](sample-walkthrough.html).
 
@@ -43,7 +45,7 @@ Walkthrough HTML, saved progress, cover images, notes, and related metadata are 
 
 ## Web walkthrough URLs
 
-GAME CODEX can store walkthrough-site URLs and attempts to display them in the in-app viewer. Some sites block embedding with `X-Frame-Options` or Content Security Policy. In that case, use **サイトを開く** to open the registered URL in a separate tab.
+GAME CODEX can store walkthrough-site URLs and attempts to display them in the in-app viewer. Some sites block embedding with `X-Frame-Options` or Content Security Policy. In that case, use **Open site** to open the registered URL in a separate tab.
 
 ## Security
 
