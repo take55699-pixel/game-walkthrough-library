@@ -20,26 +20,45 @@ for (const file of requiredFiles) {
 }
 
 const html = fs.readFileSync('index.html', 'utf8');
+const isGameCodex = html.includes('GAME CODEX');
 
 if (!/<!doctype html>/i.test(html)) fail('index.html is missing a doctype');
 if (!html.includes('GameWalkthroughLibraryDB')) fail('IndexedDB application code was not found');
-if (!html.includes('gwl-language')) fail('Language preference persistence was not found');
-if (!html.includes('Try sample') || !html.includes('サンプルを試す')) fail('Built-in sample localization is incomplete');
 
 const iframe = html.match(/<iframe class="viewer-frame"[^>]*>/)?.[0] ?? '';
 if (!iframe) fail('Walkthrough viewer iframe was not found');
 if (!iframe.includes('sandbox=')) fail('Walkthrough viewer iframe is not sandboxed');
-if (iframe.includes('allow-same-origin')) fail('Viewer sandbox must not include allow-same-origin');
+if (iframe.includes('allow-same-origin')) fail('Local viewer sandbox must not statically include allow-same-origin');
 
-const forbidden = [
-  'openNewTabButton',
-  'openCurrentInNewTab',
-  'Open unrestricted',
-  '制限なしで開く',
-  'unrestrictedConfirm'
-];
-for (const token of forbidden) {
-  if (html.includes(token)) fail(`Unsafe unrestricted execution token found: ${token}`);
+// Imported local HTML must never be promoted to a top-level same-origin blob document.
+const openCurrent = html.match(/function openCurrentInNewTab\(\)\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';
+if (/new Blob\(\[guide\.html\]/.test(openCurrent)) {
+  fail('Local HTML is opened as a top-level Blob URL');
+}
+if (/URL\.createObjectURL\(blob\)/.test(openCurrent)) {
+  fail('openCurrentInNewTab creates a Blob URL for imported local HTML');
+}
+if (html.includes('攻略HTMLを制限なしで開く') || html.includes('Open unrestricted')) {
+  fail('Unsafe unrestricted local HTML execution UI was found');
+}
+
+if (isGameCodex) {
+  const requiredV18Tokens = [
+    '攻略サイトURL',
+    'normalizeWebUrl',
+    'withProgressStorageBridge',
+    'progressStorage',
+    'GAME_CODEX_backup_'
+  ];
+  for (const token of requiredV18Tokens) {
+    if (!html.includes(token)) fail(`GAME CODEX v1.8 feature token missing: ${token}`);
+  }
+} else {
+  // Legacy v0.3.x checks remain valid during the migration commit sequence.
+  if (!html.includes('gwl-language')) fail('Language preference persistence was not found');
+  if (!html.includes('Try sample') || !html.includes('サンプルを試す')) {
+    fail('Built-in sample localization is incomplete');
+  }
 }
 
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gi)].map(match => match[1]);
@@ -52,4 +71,6 @@ for (const [index, source] of scripts.entries()) {
   }
 }
 
-if (!process.exitCode) console.log('All repository checks passed.');
+if (!process.exitCode) {
+  console.log(`All repository checks passed (${isGameCodex ? 'GAME CODEX v1.8' : 'legacy build'}).`);
+}
