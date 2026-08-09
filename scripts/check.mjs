@@ -7,6 +7,7 @@ function fail(message) {
 
 const requiredFiles = [
   'index.html',
+  'i18n.js',
   'README.md',
   'README.ja.md',
   'SECURITY.md',
@@ -20,6 +21,7 @@ for (const file of requiredFiles) {
 }
 
 const html = fs.readFileSync('index.html', 'utf8');
+const i18n = fs.existsSync('i18n.js') ? fs.readFileSync('i18n.js', 'utf8') : '';
 const isGameCodex = html.includes('GAME CODEX');
 
 if (!/<!doctype html>/i.test(html)) fail('index.html is missing a doctype');
@@ -52,6 +54,18 @@ if (isGameCodex) {
   ];
   for (const token of requiredV18Tokens) {
     if (!html.includes(token)) fail(`GAME CODEX v1.8 feature token missing: ${token}`);
+  }
+
+  if (!html.includes('<script src="i18n.js"></script>')) {
+    fail('GAME CODEX language module is not wired into index.html');
+  }
+  if (!i18n.includes('game-codex-language') || !i18n.includes('languageButton')) {
+    fail('Japanese / English language switching is incomplete');
+  }
+  try {
+    new Function(i18n);
+  } catch (error) {
+    fail(`i18n.js has a syntax error: ${error.message}`);
   }
 } else {
   // Legacy v0.3.x checks remain valid during the migration commit sequence.
