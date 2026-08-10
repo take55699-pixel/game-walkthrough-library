@@ -22,6 +22,7 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 - Mark favorites
 - Grid and list views
 - Japanese / English UI switching with the selected language saved in the browser
+- Built-in **Try sample** button when the library is empty
 - Export and import JSON backups
 - Mobile-friendly interface
 - Store the library locally in the browser
@@ -30,12 +31,12 @@ https://take55699-pixel.github.io/game-walkthrough-library/
 
 1. Open the demo.
 2. Press **EN** if you want the English interface. The selection is remembered on this browser.
-3. Press **+ Add**.
-4. Choose either an HTML walkthrough file or a walkthrough-site URL.
+3. If the library is empty, press **Try sample** to add and immediately open the included sample walkthrough.
+4. Or press **+ Add** to add your own HTML walkthrough or walkthrough-site URL.
 5. Add the title, platform, tags, notes, and cover image as needed.
 6. Open entries from the library and export backups regularly for important data.
 
-A sample HTML file is included in the repository: [`sample-walkthrough.html`](sample-walkthrough.html).
+The built-in sample uses [`sample-walkthrough.html`](sample-walkthrough.html) and is tagged `SAMPLE` when added.
 
 ## Local data and backups
 
