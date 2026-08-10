@@ -10,6 +10,8 @@ GAME CODEX is a static web app for storing, searching, opening, and maintaining 
 
 https://take55699-pixel.github.io/game-walkthrough-library/
 
+![GAME CODEX screenshot](assets/game-codex-home.webp)
+
 ## Features
 
 - Import self-contained HTML walkthrough files
