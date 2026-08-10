@@ -8,6 +8,8 @@
 
 https://take55699-pixel.github.io/game-walkthrough-library/
 
+![GAME CODEX スクリーンショット](assets/game-codex-home.webp)
+
 ## 主な機能
 
 - 自作・生成済みの攻略HTMLファイルを登録
