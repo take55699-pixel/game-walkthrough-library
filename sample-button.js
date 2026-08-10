@@ -58,7 +58,7 @@
   function setStatus(message = "", isError = false) {
     const node = $("#sampleStatus");
     if (!node) return;
-    node.textContent = message;
+    if (node.textContent !== message) node.textContent = message;
     node.style.color = isError ? "var(--danger)" : "var(--muted)";
   }
 
@@ -155,8 +155,8 @@
 
     const add = $("#emptyAddButton", actions);
     const sample = $("#trySampleButton", actions);
-    if (add) add.textContent = t.add;
-    if (sample && !busy) sample.textContent = t.sample;
+    if (add && add.textContent !== t.add) add.textContent = t.add;
+    if (sample && !busy && sample.textContent !== t.sample) sample.textContent = t.sample;
   }
 
   function scheduleSync() {
