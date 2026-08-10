@@ -8,6 +8,7 @@ function fail(message) {
 const requiredFiles = [
   'index.html',
   'i18n.js',
+  'sample-button.js',
   'README.md',
   'README.ja.md',
   'SECURITY.md',
@@ -22,6 +23,7 @@ for (const file of requiredFiles) {
 
 const html = fs.readFileSync('index.html', 'utf8');
 const i18n = fs.existsSync('i18n.js') ? fs.readFileSync('i18n.js', 'utf8') : '';
+const sampleButton = fs.existsSync('sample-button.js') ? fs.readFileSync('sample-button.js', 'utf8') : '';
 const isGameCodex = html.includes('GAME CODEX');
 
 if (!/<!doctype html>/i.test(html)) fail('index.html is missing a doctype');
@@ -66,6 +68,18 @@ if (isGameCodex) {
     new Function(i18n);
   } catch (error) {
     fail(`i18n.js has a syntax error: ${error.message}`);
+  }
+
+  if (!html.includes('<script src="sample-button.js"></script>')) {
+    fail('Built-in sample helper is not wired into index.html');
+  }
+  if (!sampleButton.includes('sample-walkthrough.html') || !sampleButton.includes('Try sample') || !sampleButton.includes('サンプルを試す')) {
+    fail('Built-in sample walkthrough support is incomplete');
+  }
+  try {
+    new Function(sampleButton);
+  } catch (error) {
+    fail(`sample-button.js has a syntax error: ${error.message}`);
   }
 } else {
   // Legacy v0.3.x checks remain valid during the migration commit sequence.
