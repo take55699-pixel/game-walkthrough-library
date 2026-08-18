@@ -1,0 +1,198 @@
+name: Repair GAME CODEX CI once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/repair-ci-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply CI and viewer safety repair
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Hide the external-open button by default. URL guides explicitly reveal it.
+          replace_once(
+              'index.html',
+              '<button class="btn small" id="openNewTabButton" title="攻略HTMLを制限なしで開く"><span class="label">完全表示で</span>開く</button>',
+              '<button class="btn small" id="openNewTabButton" title="攻略サイトを新しいタブで開く" style="display:none"><span class="label">サイトを</span>開く</button>'
+          )
+
+          part8 = Path('assets/game-codex-08.js.txt')
+          text8 = part8.read_text(encoding='utf-8')
+          old_url = '''      els.openNewTabButton.innerHTML = '<span class="label">サイトを</span>開く';
+      els.openNewTabButton.title = "攻略サイトを新しいタブで開く";
+      els.downloadHtmlButton.style.display = "none";'''
+          new_url = '''      els.openNewTabButton.innerHTML = '<span class="label">サイトを</span>開く';
+      els.openNewTabButton.title = "攻略サイトを新しいタブで開く";
+      els.openNewTabButton.style.display = "inline-flex";
+      els.downloadHtmlButton.style.display = "none";'''
+          if old_url not in text8:
+              raise SystemExit('URL viewer block not found in game-codex-08.js.txt')
+          text8 = text8.replace(old_url, new_url, 1)
+
+          old_local = '''      els.viewerNoteText.textContent = "チェックボックスの状態をGAME CODEXへ直接保存します。localStorage対応HTMLは従来方式も併用します。別タブの「完全表示」はこの保存領域とは別です。";
+      setViewerSaveState("チェック進捗保存: 有効", "ok");
+      els.openNewTabButton.innerHTML = '<span class="label">完全表示で</span>開く';
+      els.openNewTabButton.title = "攻略HTMLを制限なしで開く";
+      els.downloadHtmlButton.style.display = "inline-flex";'''
+          new_local = '''      els.viewerNoteText.textContent = "チェックボックスの状態をGAME CODEXへ直接保存します。localStorage対応HTMLは従来方式も併用します。制限外で確認したい場合はHTML保存後、信頼できるファイルだけを手動で開いてください。";
+      setViewerSaveState("チェック進捗保存: 有効", "ok");
+      els.openNewTabButton.style.display = "none";
+      els.downloadHtmlButton.style.display = "inline-flex";'''
+          if old_local not in text8:
+              raise SystemExit('Local viewer block not found in game-codex-08.js.txt')
+          part8.write_text(text8.replace(old_local, new_local, 1), encoding='utf-8')
+
+          part9 = Path('assets/game-codex-09.js.txt')
+          text9 = part9.read_text(encoding='utf-8')
+          old_blob = '''    const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);'''
+          if old_blob not in text9:
+              raise SystemExit('Unsafe local Blob open block not found in game-codex-09.js.txt')
+          text9 = text9.replace(old_blob, '''    // Local imported HTML stays inside the sandboxed viewer.\n    // Users can save the HTML and open it manually only after reviewing/trusting the file.\n    return;''', 1)
+          part9.write_text(text9, encoding='utf-8')
+
+          check = r'''import fs from 'node:fs';
+
+function fail(message) {
+  console.error(`FAIL: ${message}`);
+  process.exitCode = 1;
+}
+
+const requiredFiles = [
+  'index.html',
+  'README.md',
+  'README.ja.md',
+  'SECURITY.md',
+  'CONTRIBUTING.md',
+  'LICENSE'
+];
+
+for (const file of requiredFiles) {
+  if (!fs.existsSync(file)) fail(`Missing required file: ${file}`);
+}
+
+const html = fs.readFileSync('index.html', 'utf8');
+const isGameCodex = html.includes('GAME CODEX');
+
+if (!/<!doctype html>/i.test(html)) fail('index.html is missing a doctype');
+if (!isGameCodex) fail('GAME CODEX app shell was not found');
+
+const cssPaths = [...new Set(
+  [...html.matchAll(/href=["'](assets\/game-codex-\d+\.css)["']/g)].map(match => match[1])
+)];
+for (const path of cssPaths) {
+  if (!fs.existsSync(path)) fail(`Missing referenced stylesheet: ${path}`);
+}
+
+const modulePaths = [...new Set(
+  [...html.matchAll(/["'](assets\/game-codex-\d+\.js\.txt)["']/g)].map(match => match[1])
+)];
+if (!modulePaths.length) fail('GAME CODEX modular JavaScript parts were not found in index.html');
+
+let modularSource = '';
+for (const path of modulePaths) {
+  if (!fs.existsSync(path)) {
+    fail(`Missing referenced JavaScript part: ${path}`);
+    continue;
+  }
+  modularSource += fs.readFileSync(path, 'utf8');
+}
+
+const appSource = `${html}\n${modularSource}`;
+if (!appSource.includes('GameWalkthroughLibraryDB')) fail('IndexedDB application code was not found');
+
+const iframe = html.match(/<iframe class="viewer-frame"[^>]*>/)?.[0] ?? '';
+if (!iframe) fail('Walkthrough viewer iframe was not found');
+if (!iframe.includes('sandbox=')) fail('Walkthrough viewer iframe is not sandboxed');
+if (iframe.includes('allow-same-origin')) fail('Local viewer sandbox must not statically include allow-same-origin');
+
+const openCurrent = appSource.match(/function openCurrentInNewTab\(\)\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';
+if (/new Blob\(\[guide\.html\]/.test(openCurrent)) {
+  fail('Local HTML is opened as a top-level Blob URL');
+}
+if (/URL\.createObjectURL\(blob\)/.test(openCurrent)) {
+  fail('openCurrentInNewTab creates a Blob URL for imported local HTML');
+}
+if (appSource.includes('攻略HTMLを制限なしで開く') || appSource.includes('Open unrestricted')) {
+  fail('Unsafe unrestricted local HTML execution UI was found');
+}
+
+const requiredTokens = [
+  '攻略サイトURL',
+  'normalizeWebUrl',
+  'withProgressStorageBridge',
+  'progressStorage',
+  'checkboxProgress',
+  'GAME_CODEX_backup_'
+];
+for (const token of requiredTokens) {
+  if (!appSource.includes(token)) fail(`GAME CODEX feature token missing: ${token}`);
+}
+
+const inlineScripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gi)].map(match => match[1]);
+if (!inlineScripts.length) fail('No inline bootstrap JavaScript was found');
+for (const [index, source] of inlineScripts.entries()) {
+  try {
+    new Function(source);
+  } catch (error) {
+    fail(`Inline script ${index + 1} has a syntax error: ${error.message}`);
+  }
+}
+
+if (modularSource) {
+  try {
+    new Function(modularSource);
+  } catch (error) {
+    fail(`Combined modular JavaScript has a syntax error: ${error.message}`);
+  }
+}
+
+if (!process.exitCode) {
+  console.log(`All repository checks passed (GAME CODEX modular build, ${modulePaths.length} JS parts).`);
+}
+'''
+          Path('scripts/check.mjs').write_text(check, encoding='utf-8')
+
+          # Remove this one-time repair workflow from the resulting commit.
+          Path('.github/workflows/repair-ci-once.yml').unlink()
+          PY
+
+      - name: Validate repaired repository
+        run: node scripts/check.mjs
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assets/game-codex-08.js.txt assets/game-codex-09.js.txt scripts/check.mjs .github/workflows/repair-ci-once.yml
+          git commit -m "Fix CI for modular GAME CODEX build"
+          git push
