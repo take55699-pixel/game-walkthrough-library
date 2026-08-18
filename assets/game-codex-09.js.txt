@@ -16,27 +16,14 @@
 
   function openCurrentInNewTab() {
     const guide = state.guides.find(g => g.id === state.viewingId);
-    if (!guide) return;
-    if (isUrlGuide(guide)) {
-      const link = document.createElement("a");
-      link.href = guide.url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      return;
-    }
-    const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
+    if (!guide || !isUrlGuide(guide)) return;
     const link = document.createElement("a");
-    link.href = url;
+    link.href = guide.url;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     document.body.appendChild(link);
     link.click();
     link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   async function handleCardAction(event) {
