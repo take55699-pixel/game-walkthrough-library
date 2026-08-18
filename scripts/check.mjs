@@ -83,10 +83,24 @@ if (modularSource) {
   }
 }
 
-// Keep the security mismatch visible without falsely failing every unrelated UI commit.
+// Imported local HTML must stay inside the sandboxed viewer. Only registered web URLs may open externally.
 const openCurrent = appSource.match(/function openCurrentInNewTab\(\)\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';
+if (!openCurrent) fail('External URL open handler was not found');
 if (/new Blob\(\[guide\.html\]/.test(openCurrent)) {
-  console.warn('WARN: local HTML still has an unrestricted Blob-tab path; remove it in the next security cleanup.');
+  fail('Local HTML is opened as a top-level Blob URL');
+}
+if (/URL\.createObjectURL\(/.test(openCurrent)) {
+  fail('External-open handler creates an object URL');
+}
+if (!/!isUrlGuide\(guide\)/.test(openCurrent)) {
+  fail('External-open handler is not restricted to registered URL guides');
+}
+if (appSource.includes('攻略HTMLを制限なしで開く') || appSource.includes('Open unrestricted') || appSource.includes('完全表示で')) {
+  fail('Unsafe unrestricted local HTML execution UI was found');
+}
+const externalButton = html.match(/<button class="btn small" id="openNewTabButton"[^>]*>/)?.[0] ?? '';
+if (!externalButton || !externalButton.includes('display:none')) {
+  fail('External-open button must be hidden by default and enabled only for URL guides');
 }
 
 // Legacy helper files are optional in the current modular build, but syntax-check them when present.
@@ -100,5 +114,5 @@ for (const optional of ['i18n.js', 'sample-button.js']) {
 }
 
 if (!process.exitCode) {
-  console.log(`All repository checks passed (GAME CODEX modular build, ${modulePaths.length} JS parts).`);
+  console.log(`All repository checks passed (GAME CODEX modular build, ${modulePaths.length} JS parts, strict local HTML sandbox policy).`);
 }
