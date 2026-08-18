@@ -1,0 +1,36 @@
+name: Assemble GAME CODEX
+
+on:
+  push:
+    paths:
+      - 'staging/game_codex/READY'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Assemble GAME CODEX web app
+        shell: bash
+        run: |
+          cat staging/game_codex/part-*.txt > index.html
+          base64 -d staging/game_codex/game-codex-logo.webp.b64 > assets/game-codex-logo.webp
+          base64 -d staging/game_codex/game-codex-icon.webp.b64 > assets/game-codex-icon.webp
+
+      - name: Commit generated files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assets/game-codex-logo.webp assets/game-codex-icon.webp
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Update GAME CODEX web app and logo"
+          git push
