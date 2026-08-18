@@ -1,0 +1,12 @@
+
+    @media(max-width:900px){
+      .toolbar{padding:9px;margin-top:16px}
+      .hero{padding-top:2px}
+    }
+    @media(max-width:640px){
+      .toolbar{background:transparent;border:0;box-shadow:none;padding:0}
+      .dropzone{padding:18px}
+      .drop-icon{width:48px;height:48px}
+      .card{border-radius:16px}
+      .source-choice-grid{grid-template-columns:1fr}
+    }

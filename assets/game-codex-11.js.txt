@@ -1,0 +1,61 @@
+filter = e.target.value; render(); });
+    els.sortSelect.addEventListener("change", e => { state.sort = e.target.value; render(); });
+    els.gridView.addEventListener("click", () => { state.view = "grid"; safeStorageSet("gwl-view", "grid"); render(); });
+    els.listView.addEventListener("click", () => { state.view = "list"; safeStorageSet("gwl-view", "list"); render(); });
+
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => closeModal(document.getElementById(b.dataset.close))));
+    [els.addModal, els.urlModal, els.editModal, els.viewerModal].forEach(modal => modal.addEventListener("mousedown", e => { if (e.target === modal) closeModal(modal); }));
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        if (els.viewerModal.classList.contains("open")) closeModal(els.viewerModal);
+        else if (els.editModal.classList.contains("open")) closeModal(els.editModal);
+        else if (els.urlModal.classList.contains("open")) closeModal(els.urlModal);
+        else if (els.addModal.classList.contains("open")) closeModal(els.addModal);
+      }
+    });
+
+    els.downloadHtmlButton.addEventListener("click", downloadCurrentHTML);
+    els.openNewTabButton.addEventListener("click", openCurrentInNewTab);
+    window.addEventListener("message", handleProgressStorageMessage);
+    els.menuButton.addEventListener("click", e => { e.stopPropagation(); els.dropdown.classList.toggle("open"); });
+    document.addEventListener("click", e => { if (!e.target.closest(".menu")) els.dropdown.classList.remove("open"); });
+    els.exportButton.addEventListener("click", exportBackup);
+    els.importButton.addEventListener("click", () => { els.dropdown.classList.remove("open"); els.backupInput.click(); });
+    els.backupInput.addEventListener("change", e => { if (e.target.files?.[0]) importBackup(e.target.files[0]); });
+    els.clearAllButton.addEventListener("click", async () => {
+      els.dropdown.classList.remove("open");
+      if (!state.guides.length) return toast("削除するデータがありません。", "error");
+      if (!confirm(`登録済みの${state.guides.length}件をすべて削除しますか？\nこの操作は元に戻せません。`)) return;
+      if (!confirm("最終確認：バックアップ済みですか？")) return;
+      clearingAllData = true;
+      try {
+        if (els.viewerModal.classList.contains("open")) closeModal(els.viewerModal);
+        await waitForAllGuideWrites();
+        await clearGuides();
+        await refresh();
+        toast("全データを削除しました。");
+      } catch (error) {
+        console.error(error);
+        toast("全データを削除できませんでした。", "error");
+      } finally {
+        clearingAllData = false;
+      }
+    });
+  }
+
+  async function init() {
+    try {
+      els.storageInfo.title = "IndexedDBに保存します。ブラウザーデータの削除やストレージ消去で失われる可能性があるため、重要なデータはバックアップ推奨です。";
+      if (!("indexedDB" in window)) throw new Error("IndexedDB unsupported");
+      await openDB();
+      bindEvents();
+      await refresh();
+    } catch (err) {
+      console.error(err);
+      els.library.innerHTML = `<div class="empty"><span class="big">⚠️</span><b>保存機能を開始できませんでした</b><p>通常モードの最新版Chrome / Edge / Firefox / Safari等で開き、ブラウザーのサイトデータ保存が有効か確認してください。</p></div>`;
+      toast("ブラウザのデータベース機能を利用できません。", "error");
+    }
+  }
+
+  init();
+})();

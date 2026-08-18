@@ -1,0 +1,129 @@
+n);
+    let tracked;
+    tracked = run.finally(() => {
+      if (guideWriteQueues.get(key) === tracked) guideWriteQueues.delete(key);
+    });
+    guideWriteQueues.set(key, tracked);
+    return tracked;
+  }
+
+  async function waitForGuideWrites(guideId) {
+    const key = String(guideId);
+    while (guideWriteQueues.has(key)) {
+      const pending = guideWriteQueues.get(key);
+      await pending.catch(() => {});
+      if (guideWriteQueues.get(key) === pending) break;
+    }
+  }
+
+  async function waitForAllGuideWrites() {
+    while (guideWriteQueues.size) {
+      await Promise.allSettled([...guideWriteQueues.values()]);
+    }
+  }
+
+  function persistGuideSnapshot(guideId) {
+    const guide = state.guides.find(g => String(g.id) === String(guideId));
+    if (!guide) return Promise.resolve();
+    return putGuide({
+      ...guide,
+      progressStorage: progressStorageForDB(guide.progressStorage),
+      checkboxProgress: checkboxProgressForDB(guide.checkboxProgress)
+    });
+  }
+
+  function withProgressStorageBridge(guide, sessionToken) {
+    const guideId = serializeForInlineScript(String(guide.id));
+    const token = serializeForInlineScript(String(sessionToken));
+    const entries = serializeForInlineScript(Object.entries(sanitizeProgressStorage(guide.progressStorage)));
+    const checkboxEntries = serializeForInlineScript(Object.entries(sanitizeCheckboxProgress(guide.checkboxProgress)));
+    const bridge = `<script>
+(() => {
+  "use strict";
+  const GUIDE_ID = ${guideId};
+  const SESSION_TOKEN = ${token};
+  const seedEntries = ${entries};
+  const checkboxSeedEntries = ${checkboxEntries};
+  const data = new Map(seedEntries.map(([k,v]) => [String(k), String(v)]));
+  const checkboxData = new Map(checkboxSeedEntries.map(([k,v]) => [String(k), Boolean(v)]));
+  let restoringCheckboxes = false;
+
+  function notify(action, key = null, value = null) {
+    try {
+      window.parent.postMessage({
+        type: "game-codex-progress-storage",
+        guideId: GUIDE_ID,
+        token: SESSION_TOKEN,
+        action,
+        key,
+        value
+      }, "*");
+    } catch (_) {}
+  }
+
+  const target = Object.create(null);
+  const api = {
+    key(index) {
+      const keys = Array.from(data.keys());
+      const n = Number(index);
+      return Number.isInteger(n) && n >= 0 && n < keys.length ? keys[n] : null;
+    },
+    getItem(key) {
+      key = String(key);
+      return data.has(key) ? data.get(key) : null;
+    },
+    setItem(key, value) {
+      key = String(key); value = String(value);
+      data.set(key, value);
+      notify("set", key, value);
+    },
+    removeItem(key) {
+      key = String(key);
+      data.delete(key);
+      notify("remove", key);
+    },
+    clear() {
+      data.clear();
+      notify("clear");
+    }
+  };
+
+  Object.defineProperties(target, {
+    length: {configurable:true, enumerable:false, get:() => data.size},
+    key: {configurable:true, enumerable:false, writable:true, value:api.key},
+    getItem: {configurable:true, enumerable:false, writable:true, value:api.getItem},
+    setItem: {configurable:true, enumerable:false, writable:true, value:api.setItem},
+    removeItem: {configurable:true, enumerable:false, writable:true, value:api.removeItem},
+    clear: {configurable:true, enumerable:false, writable:true, value:api.clear},
+    [Symbol.toStringTag]: {configurable:true, enumerable:false, value:"Storage"}
+  });
+
+  const storage = new Proxy(target, {
+    get(target, prop, receiver) {
+      if (typeof prop === "symbol" || Reflect.has(target, prop)) return Reflect.get(target, prop, receiver);
+      return data.has(String(prop)) ? data.get(String(prop)) : undefined;
+    },
+    set(target, prop, value, receiver) {
+      if (typeof prop === "symbol" || Reflect.has(target, prop)) return Reflect.set(target, prop, value, receiver);
+      api.setItem(prop, value);
+      return true;
+    },
+    deleteProperty(target, prop) {
+      if (typeof prop === "symbol" || Reflect.has(target, prop)) return false;
+      api.removeItem(prop);
+      return true;
+    },
+    ownKeys(target) {
+      return [...Reflect.ownKeys(target), ...Array.from(data.keys()).filter(k => !Reflect.has(target, k))];
+    },
+    getOwnPropertyDescriptor(target, prop) {
+      const own = Reflect.getOwnPropertyDescriptor(target, prop);
+      if (own) return own;
+      const key = String(prop);
+      if (data.has(key)) return {configurable:true, enumerable:true, writable:true, value:data.get(key)};
+      return undefined;
+    }
+  });
+
+  function checkboxKey(el, index) {
+  

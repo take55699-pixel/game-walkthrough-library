@@ -1,0 +1,91 @@
+tedUrl = normalizeWebUrl(raw.url); }
+            catch { skipped++; continue; }
+          } else if (!raw.html || typeof raw.html !== "string") {
+            skipped++; continue;
+          }
+          const now = Date.now();
+          const titleFallback = sourceType === "url" ? webHost(importedUrl) : "無題の攻略チャート";
+          const guide = {
+            id: safeImportedId(raw.id),
+            sourceType,
+            url: importedUrl,
+            title: String(raw.title || titleFallback).replace(/\s+/g, " ").trim().slice(0,120) || titleFallback,
+            platform: String(raw.platform || "").slice(0,80),
+            tags: Array.isArray(raw.tags) ? [...new Set(raw.tags.map(v => String(v).trim()).filter(Boolean))].slice(0,12).map(v => v.slice(0,80)) : [],
+            notes: String(raw.notes || "").slice(0,1000),
+            favorite: Boolean(raw.favorite),
+            cover: safeImportedCover(raw.cover),
+            progressStorage: progressStorageForDB(raw.progressStorage),
+            checkboxProgress: checkboxProgressForDB(raw.checkboxProgress),
+            progressUpdatedAt: safeImportedTimestamp(raw.progressUpdatedAt, 0),
+            html: sourceType === "html" ? raw.html : "",
+            originalName: String(raw.originalName || "").slice(0,255),
+            createdAt: safeImportedTimestamp(raw.createdAt, now),
+            updatedAt: safeImportedTimestamp(raw.updatedAt, now)
+          };
+          await putGuide(guide);
+          count++;
+        } catch (itemError) {
+          console.error(itemError);
+          skipped++;
+        }
+      }
+      await refresh();
+      toast(skipped ? `${count}件を読み込み、${skipped}件をスキップしました。` : `${count}件を読み込みました。`);
+    } catch (err) {
+      console.error(err);
+      toast("バックアップ形式を読み込めませんでした。", "error");
+    } finally {
+      els.backupInput.value = "";
+      els.importButton.disabled = false;
+    }
+  }
+
+
+  function bindEvents() {
+    [els.addButton, els.mobileAdd].forEach(b => b.addEventListener("click", () => openModal(els.addModal)));
+    if (els.dropSelectButton) els.dropSelectButton.addEventListener("click", () => els.htmlInput.click());
+    els.addHtmlChoice.addEventListener("click", () => { closeModal(els.addModal); els.htmlInput.click(); });
+    els.addUrlChoice.addEventListener("click", () => { closeModal(els.addModal); openModal(els.urlModal); setTimeout(() => els.urlAddressInput.focus(), 80); });
+    els.saveUrlButton.addEventListener("click", addUrlGuide);
+    els.urlAddressInput.addEventListener("keydown", e => { if (e.key === "Enter") addUrlGuide(); });
+    els.urlTitleInput.addEventListener("keydown", e => { if (e.key === "Enter") addUrlGuide(); });
+    els.htmlInput.addEventListener("change", e => addFiles(e.target.files));
+    els.coverInput.addEventListener("change", async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) return toast("画像ファイルを選択してください。", "error");
+      if (file.size > 12 * 1024 * 1024) return toast("画像は12MB以下にしてください。", "error");
+      state.pendingCover = await fileToDataURL(file);
+      state.pendingCoverChanged = true;
+      setCoverPreview(state.pendingCover);
+      els.coverInput.value = "";
+    });
+    els.chooseCoverButton.addEventListener("click", () => els.coverInput.click());
+    els.removeCoverButton.addEventListener("click", () => {
+      state.pendingCover = null;
+      state.pendingCoverChanged = true;
+      setCoverPreview(null);
+    });
+    els.saveEditButton.addEventListener("click", saveEditor);
+    els.library.addEventListener("click", handleCardAction);
+
+    if (els.dropzone) {
+      ["dragenter","dragover"].forEach(type => els.dropzone.addEventListener(type, e => {
+        e.preventDefault(); e.stopPropagation(); els.dropzone.classList.add("dragover");
+      }));
+      ["dragleave","drop"].forEach(type => els.dropzone.addEventListener(type, e => {
+        e.preventDefault(); e.stopPropagation(); els.dropzone.classList.remove("dragover");
+      }));
+      els.dropzone.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+    }
+
+    els.searchInput.addEventListener("input", e => {
+      state.query = e.target.value;
+      els.clearSearch.style.display = state.query ? "block" : "none";
+      render();
+    });
+    els.clearSearch.addEventListener("click", () => {
+      els.searchInput.value = ""; state.query = ""; els.clearSearch.style.display = "none"; render(); els.searchInput.focus();
+    });
+    els.filterSelect.addEventListener("change", e => { state.

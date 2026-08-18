@@ -1,0 +1,47 @@
+
+    .dialog.wide{width:min(1560px,100%);height:min(94vh,1080px);display:flex;flex-direction:column;overflow:hidden}
+    .dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 20px;border-bottom:1px solid var(--line)}
+    .dialog-header h2{font-size:18px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dialog-body{padding:20px}
+    .dialog-footer{display:flex;justify-content:flex-end;gap:9px;padding:16px 20px;border-top:1px solid var(--line)}
+    .close{border:0;background:transparent;color:var(--muted);font-size:25px;width:38px;height:38px;border-radius:10px}
+    .close:hover{background:var(--panel-3);color:var(--text)}
+    .form-grid{display:grid;grid-template-columns:180px 1fr;gap:20px}
+    .cover-editor{aspect-ratio:3/4;border-radius:15px;overflow:hidden;border:1px solid var(--line);background:var(--panel-2);position:relative}
+    .cover-editor img{width:100%;height:100%;object-fit:cover;display:none}
+    .cover-editor .placeholder{position:absolute;inset:0}
+    .cover-tools{display:grid;gap:8px;margin-top:10px}
+    .fields{display:grid;gap:14px}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+    .field input,.field textarea{width:100%}
+    .field textarea{min-height:95px;resize:vertical}
+    .hint{font-size:12px;color:var(--muted);line-height:1.55}
+    .viewer-toolbar{display:flex;gap:8px;align-items:center}
+    .viewer-note{padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(255,201,107,.08);color:#d7deee;font-size:12px;line-height:1.5;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .viewer-note-text{min-width:0}
+    .save-state{flex:0 0 auto;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(5,9,18,.28);color:var(--muted);white-space:nowrap}
+    .save-state.ok{color:#91ead9;border-color:rgba(64,215,181,.28);background:rgba(64,215,181,.08)}
+    .save-state.busy{color:#ffe0a6;border-color:rgba(255,201,107,.30);background:rgba(255,201,107,.08)}
+    .save-state.error{color:#ffb7bf;border-color:rgba(255,107,122,.32);background:rgba(255,107,122,.09)}
+    .viewer-frame{border:0;width:100%;height:100%;background:white;flex:1}
+    .toast-wrap{position:fixed;right:20px;bottom:20px;z-index:300;display:grid;gap:10px;pointer-events:none}
+    .toast{min-width:260px;max-width:380px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:#151d31;box-shadow:var(--shadow);animation:toastIn .22s ease}
+    .toast.ok{border-color:rgba(67,217,189,.45)}.toast.error{border-color:rgba(255,107,122,.5)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .storage{font-size:12px;color:var(--muted);margin-left:auto}
+    .menu{position:relative}
+    .dropdown{
+      position:absolute;right:0;top:48px;z-index:50;min-width:220px;padding:7px;border:1px solid var(--line);
+      border-radius:13px;background:var(--panel-2);box-shadow:var(--shadow);display:none
+    }
+    .dropdown.open{display:grid}
+    .dropdown button{border:0;background:transparent;color:var(--text);text-align:left;padding:10px 11px;border-radius:8px}
+    .dropdown button:hover{background:var(--panel-3)}
+    .mobile-add{display:none;position:fixed;right:18px;bottom:18px;z-index:40;width:58px;height:58px;border-radius:18px;border:0;background:linear-gradient(135deg,var(--accent),#626fe4);color:white;font-size:29px;box-shadow:0 12px 35px rgba(76,91,220,.42)}
+
+    .dialog.compact{width:min(600px,100%)}
+    .source-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .source-choice{border:1px solid var(--line);border-radius:17px;background:linear-gradient(180deg,var(--panel-2),var(--panel));color:var(--text);padding:22px 18px;text-align:left;transition:.18s ease;min-height:138px}
+    .source-choice:hover{transform:translateY(-2px);border-color:#4d608a;background:var(--panel-3);box-shadow:0 14px 36px rgba(0,0,0,.22)}
+    .source-choice-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:rgba(124,140,255,.14);font-size:22px;margin-bottom:14px}
+    .source-choice b{display:block;font-size:15px;margin-bottom:6px}.source-choice span{display:block;color:var(--muted);font-size:12px;line-height:1.6}

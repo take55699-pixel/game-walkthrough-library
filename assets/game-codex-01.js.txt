@@ -1,0 +1,149 @@
+(() => {
+  "use strict";
+
+  const DB_NAME = "GameWalkthroughLibraryDB";
+  const DB_VERSION = 1;
+  const STORE = "guides";
+
+  function safeStorageGet(key, fallback = null) {
+    try {
+      const value = window.localStorage.getItem(key);
+      return value === null ? fallback : value;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // localStorageが禁止された環境でも、本体機能は継続する。
+    }
+  }
+
+  const storedView = safeStorageGet("gwl-view", "grid");
+
+  const state = {
+    guides: [],
+    editingId: null,
+    pendingCover: null,
+    pendingCoverChanged: false,
+    viewingId: null,
+    viewerSessionToken: null,
+    urlSaving: false,
+    view: storedView === "list" ? "list" : "grid",
+    query: "",
+    filter: "all",
+    sort: "updatedDesc"
+  };
+
+  const $ = (s) => document.querySelector(s);
+  const els = {
+    brandIcon: $("#brandIcon"),
+    appFavicon: $("#appFavicon"),
+    library: $("#library"),
+    htmlInput: $("#htmlInput"),
+    backupInput: $("#backupInput"),
+    coverInput: $("#coverInput"),
+    addButton: $("#addButton"),
+    mobileAdd: $("#mobileAdd"),
+    addModal: $("#addModal"),
+    addHtmlChoice: $("#addHtmlChoice"),
+    addUrlChoice: $("#addUrlChoice"),
+    urlModal: $("#urlModal"),
+    urlAddressInput: $("#urlAddressInput"),
+    urlTitleInput: $("#urlTitleInput"),
+    saveUrlButton: $("#saveUrlButton"),
+    dropSelectButton: $("#dropSelectButton"),
+    dropzone: $("#dropzone"),
+    searchInput: $("#searchInput"),
+    clearSearch: $("#clearSearch"),
+    filterSelect: $("#filterSelect"),
+    sortSelect: $("#sortSelect"),
+    gridView: $("#gridView"),
+    listView: $("#listView"),
+    totalCount: $("#totalCount"),
+    favoriteCount: $("#favoriteCount"),
+    storageInfo: $("#storageInfo"),
+    editModal: $("#editModal"),
+    editHeading: $("#editHeading"),
+    titleInput: $("#titleInput"),
+    platformInput: $("#platformInput"),
+    editUrlField: $("#editUrlField"),
+    editUrlInput: $("#editUrlInput"),
+    editHint: $("#editHint"),
+    tagsInput: $("#tagsInput"),
+    notesInput: $("#notesInput"),
+    editCoverPreview: $("#editCoverPreview"),
+    editPlaceholder: $("#editPlaceholder"),
+    chooseCoverButton: $("#chooseCoverButton"),
+    removeCoverButton: $("#removeCoverButton"),
+    saveEditButton: $("#saveEditButton"),
+    viewerModal: $("#viewerModal"),
+    viewerTitle: $("#viewerTitle"),
+    viewerNote: $("#viewerNote"),
+    viewerNoteText: $("#viewerNoteText"),
+    viewerSaveState: $("#viewerSaveState"),
+    viewerFrame: $("#viewerFrame"),
+    openNewTabButton: $("#openNewTabButton"),
+    downloadHtmlButton: $("#downloadHtmlButton"),
+    menuButton: $("#menuButton"),
+    dropdown: $("#dropdown"),
+    exportButton: $("#exportButton"),
+    importButton: $("#importButton"),
+    clearAllButton: $("#clearAllButton"),
+    toastWrap: $("#toastWrap")
+  };
+
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const database = req.result;
+        if (!database.objectStoreNames.contains(STORE)) {
+          const store = database.createObjectStore(STORE, { keyPath: "id" });
+          store.createIndex("updatedAt", "updatedAt");
+          store.createIndex("title", "title");
+        }
+      };
+      req.onsuccess = () => { db = req.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function transaction(mode = "readonly") {
+    return db.transaction(STORE, mode).objectStore(STORE);
+  }
+
+  function getAllGuides() {
+    return new Promise((resolve, reject) => {
+      const req = transaction().getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function putGuide(guide) {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").put(guide);
+      req.onsuccess = () => resolve(guide);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function deleteGuide(id) {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function clearGuides() {
+    return new Promise((resolve, reject) => {
+      const req = transaction("readwrite").clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.erro

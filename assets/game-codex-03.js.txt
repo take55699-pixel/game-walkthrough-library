@@ -1,0 +1,126 @@
+werSessionToken = null;
+      els.viewerFrame.src = "about:blank";
+      els.viewerFrame.removeAttribute("srcdoc");
+      els.viewerFrame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads allow-popups");
+      setViewerSaveState("待機中");
+    }
+  }
+
+  async function refresh() {
+    state.guides = await getAllGuides();
+    state.guides.forEach(g => {
+      g.progressStorage = sanitizeProgressStorage(g.progressStorage);
+      g.checkboxProgress = sanitizeCheckboxProgress(g.checkboxProgress);
+    });
+    render();
+    updateStorageInfo();
+  }
+
+  function updateStorageInfo() {
+    const bytes = state.guides.reduce((sum, g) => {
+      try { return sum + JSON.stringify(g).length * 2; }
+      catch { return sum + (g.html?.length || 0) * 2 + (g.url?.length || 0) * 2 + (g.cover?.length || 0) * 2; }
+    }, 0);
+    let label;
+    if (bytes === 0) label = "0 KB 使用";
+    else if (bytes < 1024 * 1024) label = `${Math.max(1, Math.round(bytes / 1024))} KB 使用`;
+    else label = `${(bytes / 1024 / 1024).toFixed(1)} MB 使用`;
+    els.storageInfo.textContent = `ブラウザ内保存・約 ${label}`;
+  }
+
+  function getVisibleGuides() {
+    const q = state.query.trim().toLowerCase();
+    let list = state.guides.filter(g => {
+      const hay = [g.title, g.platform, g.url, g.notes, ...(g.tags || [])].join(" ").toLowerCase();
+      if (q && !hay.includes(q)) return false;
+      if (state.filter === "favorite" && !g.favorite) return false;
+      if (state.filter === "html" && isUrlGuide(g)) return false;
+      if (state.filter === "web" && !isUrlGuide(g)) return false;
+      if (state.filter === "withCover" && !g.cover) return false;
+      if (state.filter === "withoutCover" && g.cover) return false;
+      return true;
+    });
+    const sorters = {
+      updatedDesc: (a,b) => b.updatedAt - a.updatedAt,
+      createdDesc: (a,b) => b.createdAt - a.createdAt,
+      titleAsc: (a,b) => String(a.title || "").localeCompare(String(b.title || ""), "ja"),
+      titleDesc: (a,b) => String(b.title || "").localeCompare(String(a.title || ""), "ja")
+    };
+    return list.sort(sorters[state.sort] || sorters.updatedDesc);
+  }
+
+  function isUrlGuide(guide) {
+    return guide?.sourceType === "url" || Boolean(guide?.url && !guide?.html);
+  }
+
+  function normalizeWebUrl(value) {
+    let input = String(value || "").trim();
+    if (!input) throw new Error("empty-url");
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(input)) input = `https://${input}`;
+    const parsed = new URL(input);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("unsupported-protocol");
+    if (!parsed.hostname) throw new Error("missing-host");
+    if (parsed.username || parsed.password) throw new Error("embedded-credentials");
+    return parsed.href;
+  }
+
+  function webHost(value) {
+    try { return new URL(value).hostname.replace(/^www\./i, "") || "Web攻略"; }
+    catch { return "Web攻略"; }
+  }
+
+  async function addUrlGuide() {
+    if (state.urlSaving) return;
+    let url;
+    try {
+      url = normalizeWebUrl(els.urlAddressInput.value);
+    } catch {
+      return toast("http / https の正しいURLを入力してください。ユーザー名・パスワード入りURLは登録できません。", "error");
+    }
+    const now = Date.now();
+    const guide = {
+      id: id(),
+      sourceType: "url",
+      url,
+      html: "",
+      title: els.urlTitleInput.value.trim().slice(0, 120) || webHost(url),
+      platform: "",
+      tags: [],
+      notes: "",
+      favorite: false,
+      cover: null,
+      progressStorage: {},
+      checkboxProgress: {},
+      progressUpdatedAt: 0,
+      originalName: "",
+      createdAt: now,
+      updatedAt: now
+    };
+    state.urlSaving = true;
+    els.saveUrlButton.disabled = true;
+    try {
+      await putGuide(guide);
+      els.urlAddressInput.value = "";
+      els.urlTitleInput.value = "";
+      closeModal(els.urlModal);
+      await refresh();
+      toast("攻略サイトURLを追加しました。");
+      openEditor(guide.id);
+    } catch (error) {
+      console.error(error);
+      toast("URLを保存できませんでした。", "error");
+    } finally {
+      state.urlSaving = false;
+      els.saveUrlButton.disabled = false;
+    }
+  }
+
+  function render() {
+    const list = getVisibleGuides();
+    els.totalCount.textContent = state.guides.length;
+    els.favoriteCount.textContent = state.guides.filter(g => g.favorite).length;
+    els.library.classList.toggle("list", state.view === "list");
+    els.gridView.classList.toggle("active", state.view === "grid");
+    els.listView.classList.toggle("active", state.view === "list");
+
+    if 

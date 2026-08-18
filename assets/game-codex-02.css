@@ -1,0 +1,63 @@
+
+    .dropzone.dragover{border-color:var(--accent-2);background:rgba(67,217,189,.10);transform:scale(1.005)}
+    .drop-info{display:flex;align-items:center;gap:15px}
+    .drop-icon{width:54px;height:54px;border-radius:16px;background:linear-gradient(145deg,var(--panel-3),#202f50);display:grid;place-items:center;font-size:25px;box-shadow:0 10px 24px rgba(0,0,0,.20)}
+    .drop-info b{display:block;margin-bottom:4px}.drop-info span{font-size:13px;color:var(--muted)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:20px 0 22px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(13,20,36,.72);box-shadow:0 10px 30px rgba(0,0,0,.10)}
+    .filters{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .select,.input{
+      min-height:40px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);padding:8px 12px;outline:none
+    }
+    .select:focus,.input:focus{border-color:var(--accent)}
+    .view-switch{display:flex;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+    .view-switch button{border:0;background:var(--panel);color:var(--muted);width:40px;height:38px}
+    .view-switch button.active{background:var(--panel-3);color:var(--text)}
+    .library{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:24px}
+    .library.list{grid-template-columns:1fr}
+    .card{
+      position:relative;overflow:hidden;border-radius:20px;border:1px solid rgba(255,255,255,.085);
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));box-shadow:0 12px 34px rgba(0,0,0,.19);
+      transition:.22s ease
+    }
+    .card:hover{transform:translateY(-6px);border-color:#536796;box-shadow:var(--shadow)}
+    .cover{
+      aspect-ratio:3/4;position:relative;overflow:hidden;background:
+      linear-gradient(145deg,rgba(124,140,255,.28),rgba(67,217,189,.10)),
+      repeating-linear-gradient(45deg,transparent 0 18px,rgba(255,255,255,.025) 18px 36px)
+    }
+    .cover img{width:100%;height:100%;object-fit:cover;display:block}
+    .placeholder{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;color:#dce2ff}
+    .placeholder .gamepad{font-size:52px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.3))}
+    .placeholder span{font-size:12px;color:#aeb9d0;margin-top:12px}
+    .badge-row{position:absolute;left:11px;right:11px;top:11px;display:flex;justify-content:space-between;pointer-events:none}
+    .badge{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(4,7,14,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12)}
+    .favorite{
+      pointer-events:auto;border:0;width:34px;height:34px;border-radius:50%;font-size:17px;
+      background:rgba(4,7,14,.72);color:#8d99af;backdrop-filter:blur(8px)
+    }
+    .favorite.on{color:#ffd166}
+    .card-body{padding:17px}
+    .card h3{font-size:17px;line-height:1.42;margin:0 0 8px;letter-spacing:-.01em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+    .meta{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;min-height:19px}
+    .tag-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;min-height:24px}
+    .tag{font-size:11px;padding:4px 7px;border-radius:7px;background:rgba(124,140,255,.12);color:#cbd1ff}
+    .card-actions{display:grid;grid-template-columns:minmax(92px,1fr) auto auto;gap:8px;margin-top:16px}
+    .delete-btn{min-width:52px}
+    .library.list .card{display:grid;grid-template-columns:120px minmax(0,1fr)}
+    .library.list .cover{aspect-ratio:3/4;height:160px}
+    .library.list .card-body{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px}
+    .library.list .card-actions{margin:0;min-width:250px}
+    .empty{
+      grid-column:1/-1;text-align:center;padding:70px 20px;border:1px dashed var(--line);
+      border-radius:18px;color:var(--muted);background:rgba(14,20,36,.45)
+    }
+    .empty .big{font-size:56px;display:block;margin-bottom:12px}
+    .modal{
+      position:fixed;inset:0;z-index:100;background:rgba(2,4,9,.82);backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;padding:24px
+    }
+    .modal.open{display:flex}
+    .dialog{
+      width:min(680px,100%);max-height:92vh;overflow:auto;border:1px solid var(--line);border-radius:20px;
+      background:var(--panel);box-shadow:var(--shadow)
+    }

@@ -1,0 +1,117 @@
+  if (el.id) return "id:" + el.id;
+    const step = el.getAttribute("data-step");
+    if (step) return "data-step:" + step;
+    const name = el.getAttribute("name");
+    if (name) return "name:" + name + "|value:" + (el.value || "") + "|index:" + index;
+    return "index:" + index;
+  }
+
+  function notifyCheckbox(key, checked) {
+    try {
+      window.parent.postMessage({
+        type: "game-codex-checkbox-progress",
+        guideId: GUIDE_ID,
+        token: SESSION_TOKEN,
+        key,
+        checked: Boolean(checked)
+      }, "*");
+    } catch (_) {}
+  }
+
+  document.addEventListener("change", (event) => {
+    if (restoringCheckboxes) return;
+    const el = event.target;
+    if (!el || !el.matches || !el.matches('input[type="checkbox"]')) return;
+    const checks = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+    const index = checks.indexOf(el);
+    if (index < 0) return;
+    notifyCheckbox(checkboxKey(el, index), el.checked);
+  }, true);
+
+  function restoreCheckboxProgress() {
+    const checks = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+    if (!checks.length || !checkboxData.size) return;
+    let signal = null;
+    restoringCheckboxes = true;
+    try {
+      checks.forEach((el, index) => {
+        const key = checkboxKey(el, index);
+        if (!checkboxData.has(key)) return;
+        el.checked = checkboxData.get(key);
+        if (!signal) signal = el;
+      });
+      // 多くの攻略HTMLは change で進捗カウンターを再計算するため、
+      // 復元完了後に1回だけ通知して表示も同期させる。
+      if (signal) signal.dispatchEvent(new Event("change", {bubbles:true}));
+    } catch (_) {
+      // 個別HTMLのイベント処理が失敗しても、チェック状態の復元自体は維持する。
+    } finally {
+      restoringCheckboxes = false;
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => setTimeout(restoreCheckboxProgress, 0), {once:true});
+  } else {
+    setTimeout(restoreCheckboxProgress, 0);
+  }
+
+  try {
+    Object.defineProperty(window, "localStorage", {configurable:true, enumerable:true, value:storage});
+  } catch (_) {
+    try { window.localStorage = storage; } catch (_) {}
+  }
+})();
+<\/script>`;
+
+    if (/<head(?:\s[^>]*)?>/i.test(guide.html)) {
+      return guide.html.replace(/(<head(?:\s[^>]*)?>)/i, `$1${bridge}`);
+    }
+    if (/<html(?:\s[^>]*)?>/i.test(guide.html)) {
+      return guide.html.replace(/(<html(?:\s[^>]*)?>)/i, `$1<head>${bridge}</head>`);
+    }
+    return `<!doctype html><html><head>${bridge}</head><body>${guide.html}</body></html>`;
+  }
+
+  function persistProgressChange(message) {
+    const guide = state.guides.find(g => String(g.id) === String(message.guideId));
+    if (!guide || isUrlGuide(guide) || clearingAllData || blockedProgressIds.has(String(guide.id))) return;
+
+    const storage = sanitizeProgressStorage(guide.progressStorage);
+    if (message.action === "set") {
+      const key = String(message.key);
+      const value = String(message.value);
+      if (key.length > MAX_PROGRESS_KEY_CHARS || value.length > MAX_PROGRESS_VALUE_CHARS) {
+        setViewerSaveState("保存失敗", "error");
+        return toast("進捗データが大きすぎるため保存できませんでした。", "error");
+      }
+      const before = Object.prototype.hasOwnProperty.call(storage, key) ? String(storage[key]).length + key.length : 0;
+      const projected = progressStorageSize(storage) - before + key.length + value.length;
+      if (projected > MAX_PROGRESS_TOTAL_CHARS || (!Object.prototype.hasOwnProperty.call(storage, key) && Object.keys(storage).length >= MAX_PROGRESS_ENTRIES)) {
+        setViewerSaveState("保存失敗", "error");
+        return toast("この攻略HTMLの進捗保存容量が上限に達しました。", "error");
+      }
+      Object.defineProperty(storage, key, {value, enumerable:true, writable:true, configurable:true});
+    } else if (message.action === "remove") {
+      delete storage[String(message.key)];
+    } else if (message.action === "clear") {
+      for (const key of Object.keys(storage)) delete storage[key];
+    } else {
+      return;
+    }
+
+    guide.progressStorage = storage;
+    guide.progressUpdatedAt = Date.now();
+    setViewerSaveState("保存中…", "busy");
+
+    queueGuideWrite(guide.id, () => persistGuideSnapshot(guide.id))
+      .then(() => {
+        if (String(state.viewingId || "") === String(guide.id) || recentViewerSessions.has(String(guide.id))) {
+          setViewerSaveState("保存済み", "ok");
+        }
+        updateStorageInfo();
+      })
+      .catch(error => {
+        console.error(error);
+        setViewerSaveState("保存失敗", "error");
+        toast("進捗を保存できませんでした。保存容量をご確認

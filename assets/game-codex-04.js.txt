@@ -1,0 +1,106 @@
+(!list.length) {
+      const hasAny = state.guides.length > 0;
+      els.library.innerHTML = `<div class="empty"><span class="big">${hasAny ? "🔎" : "📚"}</span><b>${hasAny ? "条件に一致する攻略チャートがありません" : "攻略チャートはまだありません"}</b><p>${hasAny ? "検索語や絞り込みを変更してください。" : "HTMLファイルまたは攻略サイトURLを追加すると、ここに並びます。"}</p></div>`;
+      return;
+    }
+
+    els.library.innerHTML = list.map(g => {
+      const web = isUrlGuide(g);
+      const cover = g.cover
+        ? `<img src="${escapeHTML(g.cover)}" alt="${escapeHTML(g.title)}のジャケット" loading="lazy">`
+        : web
+          ? `<div class="placeholder"><div class="gamepad">🌐</div><span>攻略サイト</span></div>`
+          : `<div class="placeholder"><div class="gamepad">🎮</div><span>ジャケット未設定</span></div>`;
+      const tags = (g.tags || []).slice(0, 3).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join("");
+      const metaLabel = g.platform || (web ? webHost(g.url) : "機種未設定");
+      return `<article class="card" data-id="${escapeHTML(g.id)}">
+        <div class="cover">
+          ${cover}
+          <div class="badge-row">
+            <span class="badge">${web ? "WEB" : "HTML"}</span>
+            <button class="favorite ${g.favorite ? "on" : ""}" data-action="favorite" title="お気に入り">${g.favorite ? "★" : "☆"}</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div>
+            <h3 title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</h3>
+            <div class="meta"><span>${escapeHTML(metaLabel)}</span><span>・</span><span>${formatDate(g.updatedAt)}</span></div>
+            ${web ? `<div class="url-host" title="${escapeHTML(g.url)}">${escapeHTML(g.url)}</div>` : ""}
+            <div class="tag-list">${tags}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn small primary" data-action="view">開く</button>
+            <button class="btn small edit-btn" data-action="edit" title="編集">編集</button>
+            <button class="btn small danger delete-btn" data-action="delete" title="削除" aria-label="この攻略チャートを削除">削除</button>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  async function addFiles(files) {
+    const htmlFiles = [...files].filter(f => /\.html?$/i.test(f.name) || f.type === "text/html");
+    if (!htmlFiles.length) return toast("HTMLファイルを選択してください。", "error");
+    let added = 0;
+    let lastAddedId = null;
+    for (const file of htmlFiles) {
+      try {
+        const html = await fileToText(file);
+        if (!html.trim()) throw new Error("empty");
+        const now = Date.now() + added;
+        const guide = {
+          id: id(),
+          sourceType: "html",
+          url: "",
+          title: parseTitle(html, file.name.replace(/\.html?$/i, "")),
+          platform: "",
+          tags: [],
+          notes: "",
+          favorite: false,
+          cover: null,
+          progressStorage: {},
+          checkboxProgress: {},
+          progressUpdatedAt: 0,
+          html,
+          originalName: file.name,
+          createdAt: now,
+          updatedAt: now
+        };
+        await putGuide(guide);
+        lastAddedId = guide.id;
+        added++;
+      } catch (error) {
+        console.error(error);
+        toast(`${file.name} を読み込みまたは保存できませんでした。`, "error");
+      }
+    }
+    els.htmlInput.value = "";
+    await refresh();
+    if (added > 0) toast(`${added}件の攻略チャートを追加しました。`);
+    if (added === 1 && lastAddedId) openEditor(lastAddedId);
+  }
+
+  function setCoverPreview(dataUrl) {
+    els.editCoverPreview.src = dataUrl || "";
+    els.editCoverPreview.style.display = dataUrl ? "block" : "none";
+    els.editPlaceholder.style.display = dataUrl ? "none" : "flex";
+  }
+
+  function openEditor(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    state.editingId = guideId;
+    state.pendingCover = guide.cover || null;
+    state.pendingCoverChanged = false;
+    els.titleInput.value = guide.title || "";
+    els.platformInput.value = guide.platform || "";
+    const web = isUrlGuide(guide);
+    els.editHeading.textContent = web ? "攻略サイトを編集" : "攻略HTMLを編集";
+    els.editUrlField.hidden = !web;
+    els.editUrlInput.value = web ? (guide.url || "") : "";
+    els.editHint.textContent = web
+      ? "攻略サイトURLは http / https のみ対応しています。埋め込み可否はサイト側の X-Frame-Options / CSP 等に依存します。"
+      : "HTML本文はそのまま保存されます。タイトルはHTML内の <title> や最初の <h1> から自動取得します。";
+    els.tagsInput.value = (guide.tags || []).join(", ");
+    els.notesInput.value = guide.notes || "";
+    setCoverPreview(state.pendingCover

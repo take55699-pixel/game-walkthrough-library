@@ -1,0 +1,98 @@
+ください。", "error");
+      });
+  }
+
+  function persistCheckboxProgressChange(message) {
+    const guide = state.guides.find(g => String(g.id) === String(message.guideId));
+    if (!guide || isUrlGuide(guide) || clearingAllData || blockedProgressIds.has(String(guide.id))) return;
+
+    const storage = sanitizeCheckboxProgress(guide.checkboxProgress);
+    const key = String(message.key || "");
+    if (!key || key.length > MAX_CHECKBOX_KEY_CHARS) {
+      setViewerSaveState("保存失敗", "error");
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(storage, key) && Object.keys(storage).length >= MAX_CHECKBOX_ENTRIES) {
+      setViewerSaveState("保存失敗", "error");
+      return toast("チェック進捗の保存件数が上限に達しました。", "error");
+    }
+    Object.defineProperty(storage, key, {value:Boolean(message.checked), enumerable:true, writable:true, configurable:true});
+    guide.checkboxProgress = storage;
+    guide.progressUpdatedAt = Date.now();
+    setViewerSaveState("保存中…", "busy");
+
+    queueGuideWrite(guide.id, () => persistGuideSnapshot(guide.id))
+      .then(() => {
+        if (String(state.viewingId || "") === String(guide.id) || recentViewerSessions.has(String(guide.id))) {
+          setViewerSaveState("保存済み", "ok");
+        }
+        updateStorageInfo();
+      })
+      .catch(error => {
+        console.error(error);
+        setViewerSaveState("保存失敗", "error");
+        toast("チェック進捗を保存できませんでした。保存容量をご確認ください。", "error");
+      });
+  }
+
+  function handleProgressStorageMessage(event) {
+    if (event.source !== els.viewerFrame.contentWindow) return;
+    const message = event.data;
+    if (!message || (message.type !== "game-codex-progress-storage" && message.type !== "game-codex-checkbox-progress")) return;
+    const messageGuideId = String(message.guideId || "");
+    const token = String(message.token || "");
+    const currentAuthorized = messageGuideId === String(state.viewingId || "") && token && token === state.viewerSessionToken;
+    const recentAuthorized = token && recentViewerSessions.get(messageGuideId) === token;
+    if (!currentAuthorized && !recentAuthorized) return;
+    if (message.type === "game-codex-checkbox-progress") persistCheckboxProgressChange(message);
+    else persistProgressChange(message);
+  }
+
+  function webViewerSandbox(url) {
+    const tokens = ["allow-scripts", "allow-forms", "allow-modals", "allow-downloads", "allow-popups", "allow-popups-to-escape-sandbox"];
+    try {
+      const targetOrigin = new URL(url).origin;
+      const appOrigin = location.origin;
+      if (appOrigin === "null" || targetOrigin !== appOrigin) tokens.push("allow-same-origin");
+    } catch {}
+    return tokens.join(" ");
+  }
+
+
+  function openViewer(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    state.viewingId = guideId;
+    state.viewerSessionToken = null;
+    els.viewerTitle.textContent = guide.title;
+    els.viewerFrame.src = "about:blank";
+    els.viewerFrame.removeAttribute("srcdoc");
+
+    if (isUrlGuide(guide)) {
+      els.viewerFrame.setAttribute("sandbox", webViewerSandbox(guide.url));
+      els.viewerNoteText.textContent = "攻略サイトを表示しています。サイト側の X-Frame-Options / CSP で埋め込みが禁止されている場合、アプリ内では表示できません。右上の「サイトを開く」を使用してください。";
+      setViewerSaveState("サイト側で管理");
+      els.openNewTabButton.innerHTML = '<span class="label">サイトを</span>開く';
+      els.openNewTabButton.title = "攻略サイトを新しいタブで開く";
+      els.downloadHtmlButton.style.display = "none";
+      els.viewerFrame.src = guide.url;
+    } else {
+      const token = id();
+      state.viewerSessionToken = token;
+      guide.progressStorage = sanitizeProgressStorage(guide.progressStorage);
+      guide.checkboxProgress = sanitizeCheckboxProgress(guide.checkboxProgress);
+      els.viewerFrame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads allow-popups");
+      els.viewerNoteText.textContent = "チェックボックスの状態をGAME CODEXへ直接保存します。localStorage対応HTMLは従来方式も併用します。別タブの「完全表示」はこの保存領域とは別です。";
+      setViewerSaveState("チェック進捗保存: 有効", "ok");
+      els.openNewTabButton.innerHTML = '<span class="label">完全表示で</span>開く';
+      els.openNewTabButton.title = "攻略HTMLを制限なしで開く";
+      els.downloadHtmlButton.style.display = "inline-flex";
+      els.viewerFrame.removeAttribute("src");
+      els.viewerFrame.srcdoc = withProgressStorageBridge(guide, token);
+    }
+    openModal(els.viewerModal);
+  }
+
+  function downloadBlob(content, type, filename) {
+    const blob = content instanceof Blob ? content : new Blob([content], {type});
+    const

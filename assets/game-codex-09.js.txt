@@ -1,0 +1,128 @@
+ url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2500);
+  }
+
+  function downloadCurrentHTML() {
+    const guide = state.guides.find(g => g.id === state.viewingId);
+    if (!guide || isUrlGuide(guide)) return;
+    downloadBlob(guide.html, "text/html;charset=utf-8", `${safeFilename(guide.title)}.html`);
+  }
+
+  function openCurrentInNewTab() {
+    const guide = state.guides.find(g => g.id === state.viewingId);
+    if (!guide) return;
+    if (isUrlGuide(guide)) {
+      const link = document.createElement("a");
+      link.href = guide.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+    const blob = new Blob([guide.html], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function handleCardAction(event) {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    const card = button.closest(".card");
+    const guideId = card?.dataset.id;
+    if (!guideId) return;
+    const action = button.dataset.action;
+    if (action === "view") openViewer(guideId);
+    if (action === "edit") openEditor(guideId);
+    if (action === "favorite") await toggleFavorite(guideId);
+    if (action === "delete") {
+      const guide = state.guides.find(g => g.id === guideId);
+      if (!guide) return;
+      const approved = confirm(`「${guide.title}」を削除しますか？\n\n${isUrlGuide(guide) ? "登録URL" : "HTML本体・保存済み進捗"}・ジャケット画像・メモが削除されます。`);
+      if (!approved) return;
+      const key = String(guideId);
+      blockedProgressIds.add(key);
+      try {
+        await queueGuideWrite(guideId, () => deleteGuide(guideId));
+        await waitForGuideWrites(guideId);
+        if (state.editingId === guideId) state.editingId = null;
+        if (state.viewingId === guideId) closeModal(els.viewerModal);
+        await refresh();
+        toast(`「${guide.title}」を削除しました。`);
+      } catch (error) {
+        console.error(error);
+        toast("削除できませんでした。もう一度お試しください。", "error");
+      } finally {
+        blockedProgressIds.delete(key);
+      }
+    }
+  }
+
+  function safeImportedTimestamp(value, fallback) {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  }
+
+  function safeImportedId(value) {
+    const text = typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+    return text && text.length <= 200 ? text : id();
+  }
+
+  function safeImportedCover(value) {
+    if (typeof value !== "string" || !value.startsWith("data:image/")) return null;
+    return value.length <= 24_000_000 ? value : null;
+  }
+
+  async function exportBackup() {
+    try {
+      await waitForAllGuideWrites();
+      await refresh();
+      const payload = {
+        app: "GAME CODEX",
+        version: 5,
+        exportedAt: new Date().toISOString(),
+        guides: state.guides.map(g => ({
+          ...g,
+          progressStorage: progressStorageForDB(g.progressStorage),
+          checkboxProgress: checkboxProgressForDB(g.checkboxProgress)
+        }))
+      };
+      downloadBlob(JSON.stringify(payload, null, 2), "application/json;charset=utf-8", `GAME_CODEX_backup_${localDateStamp()}.json`);
+      els.dropdown.classList.remove("open");
+      toast("バックアップを書き出しました。");
+    } catch (error) {
+      console.error(error);
+      toast("バックアップを書き出せませんでした。", "error");
+    }
+  }
+
+  async function importBackup(file) {
+    els.importButton.disabled = true;
+    try {
+      await waitForAllGuideWrites();
+      const text = await fileToText(file);
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.guides)) throw new Error("invalid");
+      let count = 0;
+      let skipped = 0;
+      for (const raw of data.guides) {
+        try {
+          if (!raw || typeof raw !== "object" || Array.isArray(raw)) { skipped++; continue; }
+          const sourceType = raw.sourceType === "url" || (!raw.html && raw.url) ? "url" : "html";
+          let importedUrl = "";
+          if (sourceType === "url") {
+            try { impor

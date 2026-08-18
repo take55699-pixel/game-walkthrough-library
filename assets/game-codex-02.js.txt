@@ -1,0 +1,124 @@
+r);
+    });
+  }
+
+  function id() {
+    return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  function escapeHTML(value = "") {
+    return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+  }
+
+  function safeFilename(value) {
+    return (value || "攻略チャート").replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 100) || "攻略チャート";
+  }
+
+  function formatDate(timestamp) {
+    try {
+      return new Intl.DateTimeFormat("ja-JP", { year:"numeric", month:"short", day:"numeric" }).format(new Date(timestamp));
+    } catch { return ""; }
+  }
+
+  function localDateStamp(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseTitle(html, fallback) {
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const title = doc.querySelector("title")?.textContent?.trim();
+      const h1 = doc.querySelector("h1")?.textContent?.trim();
+      const meta = doc.querySelector('meta[property="og:title"]')?.getAttribute("content")?.trim();
+      return (title || h1 || meta || fallback).replace(/\s+/g, " ").slice(0, 120);
+    } catch {
+      return fallback;
+    }
+  }
+
+  function normalizeTags(text) {
+    return [...new Set(String(text || "").split(/[,、]/).map(v => v.trim()).filter(Boolean))].slice(0, 12);
+  }
+
+  function fileToText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const bytes = new Uint8Array(reader.result || new ArrayBuffer(0));
+          let encoding = "utf-8";
+          let offset = 0;
+          if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            encoding = "utf-8"; offset = 3;
+          } else if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+            encoding = "utf-16le"; offset = 2;
+          } else if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+            encoding = "utf-16be"; offset = 2;
+          } else if (/\.html?$/i.test(file.name || "") || file.type === "text/html") {
+            const probeBytes = bytes.slice(0, Math.min(bytes.length, 8192));
+            let probe = "";
+            try { probe = new TextDecoder("windows-1252").decode(probeBytes); }
+            catch { probe = String.fromCharCode(...probeBytes); }
+            const match = probe.match(/charset\s*=\s*["']?\s*([a-zA-Z0-9._-]+)/i);
+            if (match?.[1]) encoding = match[1];
+          }
+          let decoder;
+          try { decoder = new TextDecoder(encoding); }
+          catch { decoder = new TextDecoder("utf-8"); }
+          resolve(decoder.decode(bytes.slice(offset)));
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function toast(message, type = "ok") {
+    while (els.toastWrap.children.length >= 3) {
+      els.toastWrap.firstElementChild?.remove();
+    }
+    const node = document.createElement("div");
+    node.className = `toast ${type}`;
+    node.textContent = message;
+    els.toastWrap.appendChild(node);
+    setTimeout(() => node.remove(), 3200);
+  }
+
+  function openModal(node) {
+    node.classList.add("open");
+    node.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  const recentViewerSessions = new Map();
+
+  function rememberViewerSession(guideId, token) {
+    if (!guideId || !token) return;
+    recentViewerSessions.set(String(guideId), token);
+    setTimeout(() => {
+      if (recentViewerSessions.get(String(guideId)) === token) recentViewerSessions.delete(String(guideId));
+    }, 1800);
+  }
+
+  function closeModal(node) {
+    node.classList.remove("open");
+    node.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (node === els.viewerModal) {
+      rememberViewerSession(state.viewingId, state.viewerSessionToken);
+      state.viewingId = null;
+      state.vie

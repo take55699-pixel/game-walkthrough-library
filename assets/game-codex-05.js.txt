@@ -1,0 +1,128 @@
+);
+    openModal(els.editModal);
+    setTimeout(() => els.titleInput.focus(), 80);
+  }
+
+  async function saveEditor() {
+    const guide = state.guides.find(g => g.id === state.editingId);
+    if (!guide) return;
+    const title = els.titleInput.value.trim();
+    if (!title) return toast("ゲームタイトルを入力してください。", "error");
+    let editedUrl = guide.url || "";
+    if (isUrlGuide(guide)) {
+      try { editedUrl = normalizeWebUrl(els.editUrlInput.value); }
+      catch { return toast("http / https の正しいURLを入力してください。ユーザー名・パスワード入りURLは登録できません。", "error"); }
+    }
+
+    Object.assign(guide, {
+      title: title.slice(0, 120),
+      url: editedUrl,
+      platform: els.platformInput.value.trim().slice(0, 80),
+      tags: normalizeTags(els.tagsInput.value),
+      notes: els.notesInput.value.trim().slice(0, 1000),
+      cover: state.pendingCover,
+      updatedAt: Date.now()
+    });
+
+    els.saveEditButton.disabled = true;
+    try {
+      await queueGuideWrite(guide.id, () => persistGuideSnapshot(guide.id));
+      await waitForGuideWrites(guide.id);
+      closeModal(els.editModal);
+      await refresh();
+      toast("変更を保存しました。");
+    } catch (err) {
+      console.error(err);
+      await refresh().catch(() => {});
+      toast("保存できませんでした。保存容量をご確認ください。", "error");
+    } finally {
+      els.saveEditButton.disabled = false;
+    }
+  }
+
+  async function toggleFavorite(guideId) {
+    const guide = state.guides.find(g => g.id === guideId);
+    if (!guide) return;
+    guide.favorite = !guide.favorite;
+    guide.updatedAt = Date.now();
+    try {
+      await queueGuideWrite(guideId, () => persistGuideSnapshot(guideId));
+      await waitForGuideWrites(guideId);
+      await refresh();
+    } catch (error) {
+      console.error(error);
+      await refresh().catch(() => {});
+      toast("お気に入りを保存できませんでした。", "error");
+    }
+  }
+
+  const MAX_PROGRESS_ENTRIES = 1500;
+  const MAX_PROGRESS_KEY_CHARS = 4096;
+  const MAX_PROGRESS_VALUE_CHARS = 4_000_000;
+  const MAX_PROGRESS_TOTAL_CHARS = 8_000_000;
+  const MAX_CHECKBOX_ENTRIES = 5000;
+  const MAX_CHECKBOX_KEY_CHARS = 1024;
+  const guideWriteQueues = new Map();
+  const blockedProgressIds = new Set();
+  let clearingAllData = false;
+
+  function serializeForInlineScript(value) {
+    return JSON.stringify(value).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+  }
+
+  function sanitizeProgressStorage(value) {
+    const out = Object.create(null);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return out;
+    let count = 0;
+    let total = 0;
+    for (const [rawKey, rawValue] of Object.entries(value)) {
+      if (count >= MAX_PROGRESS_ENTRIES) break;
+      const key = String(rawKey);
+      const val = String(rawValue);
+      if (key.length > MAX_PROGRESS_KEY_CHARS || val.length > MAX_PROGRESS_VALUE_CHARS) continue;
+      if (total + key.length + val.length > MAX_PROGRESS_TOTAL_CHARS) break;
+      Object.defineProperty(out, key, {value: val, enumerable: true, writable: true, configurable: true});
+      total += key.length + val.length;
+      count++;
+    }
+    return out;
+  }
+
+  function sanitizeCheckboxProgress(value) {
+    const out = Object.create(null);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return out;
+    let count = 0;
+    for (const [rawKey, rawValue] of Object.entries(value)) {
+      if (count >= MAX_CHECKBOX_ENTRIES) break;
+      const key = String(rawKey);
+      if (!key || key.length > MAX_CHECKBOX_KEY_CHARS) continue;
+      Object.defineProperty(out, key, {value: Boolean(rawValue), enumerable:true, writable:true, configurable:true});
+      count++;
+    }
+    return out;
+  }
+
+  function checkboxProgressForDB(value) {
+    return Object.fromEntries(Object.entries(sanitizeCheckboxProgress(value)));
+  }
+
+  function progressStorageSize(value) {
+    let total = 0;
+    for (const [key, val] of Object.entries(value || {})) total += String(key).length + String(val).length;
+    return total;
+  }
+
+  function progressStorageForDB(value) {
+    return Object.fromEntries(Object.entries(sanitizeProgressStorage(value)));
+  }
+
+  function setViewerSaveState(text, type = "") {
+    if (!els.viewerSaveState) return;
+    els.viewerSaveState.textContent = text;
+    els.viewerSaveState.className = `save-state${type ? ` ${type}` : ""}`;
+  }
+
+  function queueGuideWrite(guideId, operation) {
+    const key = String(guideId);
+    const previous = guideWriteQueues.get(key) || Promise.resolve();
+    const run = previous.catch(() => {}).then(operatio
