@@ -74,6 +74,7 @@
       setViewerSaveState("サイト側で管理");
       els.openNewTabButton.innerHTML = '<span class="label">サイトを</span>開く';
       els.openNewTabButton.title = "攻略サイトを新しいタブで開く";
+      els.openNewTabButton.style.display = "inline-flex";
       els.downloadHtmlButton.style.display = "none";
       els.viewerFrame.src = guide.url;
     } else {
@@ -82,10 +83,9 @@
       guide.progressStorage = sanitizeProgressStorage(guide.progressStorage);
       guide.checkboxProgress = sanitizeCheckboxProgress(guide.checkboxProgress);
       els.viewerFrame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads allow-popups");
-      els.viewerNoteText.textContent = "チェックボックスの状態をGAME CODEXへ直接保存します。localStorage対応HTMLは従来方式も併用します。別タブの「完全表示」はこの保存領域とは別です。";
+      els.viewerNoteText.textContent = "チェックボックスの状態をGAME CODEXへ直接保存します。localStorage対応HTMLは従来方式も併用します。制限外で確認したい場合はHTML保存後、信頼できるファイルだけを手動で開いてください。";
       setViewerSaveState("チェック進捗保存: 有効", "ok");
-      els.openNewTabButton.innerHTML = '<span class="label">完全表示で</span>開く';
-      els.openNewTabButton.title = "攻略HTMLを制限なしで開く";
+      els.openNewTabButton.style.display = "none";
       els.downloadHtmlButton.style.display = "inline-flex";
       els.viewerFrame.removeAttribute("src");
       els.viewerFrame.srcdoc = withProgressStorageBridge(guide, token);
